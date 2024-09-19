@@ -16,8 +16,8 @@ const Table = () => {
     das: "",
     verticals: "",
     raasProviders: "",
-    l2OrL3: "", // New filter for L2/L3
-    dateRange: "", // Default to empty string for showing all
+    l2OrL3: "", // Filter for L2/L3
+    dateRange: "All", // Default to 'All' for showing all
   });
 
   const [uniqueOptions, setUniqueOptions] = useState({
@@ -44,7 +44,7 @@ const Table = () => {
         const das = [...new Set(initialData.map((row) => row.da))];
         const verticals = [...new Set(initialData.map((row) => row.vertical))];
         const raasProviders = [...new Set(initialData.map((row) => row.raas))];
-        const l2OrL3 = [...new Set(initialData.map((row) => row.l2OrL3))]; // L2/L3 values
+        const l2OrL3 = [...new Set(initialData.map((row) => row.l2OrL3))];
 
         setUniqueOptions({
           rollups,
@@ -74,7 +74,7 @@ const Table = () => {
 
   // Get the date range limit based on the selected date range
   const getDateRangeLimit = () => {
-    if (!filters.dateRange) return null; // Show all data if no date range selected
+    if (filters.dateRange === "All") return null; // Show all data if 'All' is selected
 
     const now = new Date();
     switch (filters.dateRange) {
@@ -104,7 +104,7 @@ const Table = () => {
         (!filters.verticals || row.vertical === filters.verticals) &&
         (!filters.raasProviders || row.raas === filters.raasProviders) &&
         (!filters.l2OrL3 || row.l2OrL3 === filters.l2OrL3) && // L2/L3 filter logic
-        (!dateRangeLimit || rowDate >= dateRangeLimit)
+        (!dateRangeLimit || rowDate >= dateRangeLimit) // Date filter logic
       );
     });
   };

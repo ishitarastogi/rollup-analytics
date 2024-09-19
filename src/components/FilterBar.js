@@ -69,6 +69,12 @@ const FilterBar = ({ filters, setFilters, uniqueOptions }) => {
 
       <div className="date-range">
         <button
+          className={filters.dateRange === "All" ? "selected" : ""}
+          onClick={() => setFilters({ ...filters, dateRange: "All" })}
+        >
+          All
+        </button>
+        <button
           className={filters.dateRange === "1W" ? "selected" : ""}
           onClick={() => setFilters({ ...filters, dateRange: "1W" })}
         >
