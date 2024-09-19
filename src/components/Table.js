@@ -16,6 +16,7 @@ const Table = () => {
     das: "",
     verticals: "",
     raasProviders: "",
+    l2OrL3: "", // New filter for L2/L3
     dateRange: "", // Default to empty string for showing all
   });
 
@@ -25,6 +26,7 @@ const Table = () => {
     das: [],
     verticals: [],
     raasProviders: [],
+    l2OrL3: [], // Unique values for L2/L3
   });
 
   useEffect(() => {
@@ -42,6 +44,7 @@ const Table = () => {
         const das = [...new Set(initialData.map((row) => row.da))];
         const verticals = [...new Set(initialData.map((row) => row.vertical))];
         const raasProviders = [...new Set(initialData.map((row) => row.raas))];
+        const l2OrL3 = [...new Set(initialData.map((row) => row.l2OrL3))]; // L2/L3 values
 
         setUniqueOptions({
           rollups,
@@ -49,6 +52,7 @@ const Table = () => {
           das,
           verticals,
           raasProviders,
+          l2OrL3,
         });
 
         const updatedData = await Promise.all(
@@ -99,7 +103,8 @@ const Table = () => {
         (!filters.das || row.da === filters.das) &&
         (!filters.verticals || row.vertical === filters.verticals) &&
         (!filters.raasProviders || row.raas === filters.raasProviders) &&
-        (!dateRangeLimit || rowDate >= dateRangeLimit) // Show all if no date range is selected
+        (!filters.l2OrL3 || row.l2OrL3 === filters.l2OrL3) && // L2/L3 filter logic
+        (!dateRangeLimit || rowDate >= dateRangeLimit)
       );
     });
   };
@@ -135,6 +140,9 @@ const Table = () => {
                 <th>DA</th>
                 <th>Vertical</th>
                 <th>RaaS Provider</th>
+                <th>L2/L3</th>
+                {filters.l2OrL3 === "L3" && <th>Settlement when L3</th>}{" "}
+                {/* Conditionally render column */}
               </tr>
             </thead>
             <tbody>
@@ -151,6 +159,11 @@ const Table = () => {
                   <td>{row.da}</td>
                   <td>{row.vertical}</td>
                   <td>{row.raas}</td>
+                  <td>{row.l2OrL3}</td>
+                  {filters.l2OrL3 === "L3" && (
+                    <td>{row.settlementWhenL3}</td>
+                  )}{" "}
+                  {/* Show L3 settlement if L3 */}
                 </tr>
               ))}
             </tbody>

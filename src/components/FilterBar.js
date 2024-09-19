@@ -57,6 +57,16 @@ const FilterBar = ({ filters, setFilters, uniqueOptions }) => {
         ))}
       </select>
 
+      {/* L2/L3 Filter */}
+      <select name="l2OrL3" onChange={handleFilterChange}>
+        <option value="">All L2/L3</option>
+        {uniqueOptions.l2OrL3?.map((l2OrL3, index) => (
+          <option key={index} value={l2OrL3}>
+            {l2OrL3}
+          </option>
+        ))}
+      </select>
+
       <div className="date-range">
         <button
           className={filters.dateRange === "1W" ? "selected" : ""}

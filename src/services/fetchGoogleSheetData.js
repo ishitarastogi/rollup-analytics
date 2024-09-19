@@ -49,20 +49,24 @@ export const fetchGoogleSheetData = async () => {
     const sheetData = response.data.values; // This contains the actual data from the sheet
 
     // Create an initial parsed data with placeholders for block explorer data
+    // Create an initial parsed data with placeholders for block explorer data
     const parsedData = sheetData.map((rowData) => ({
       name: rowData[0],
-      projectId: rowData[2], // Fetch the ID from the 3rd column
+      projectId: rowData[2],
       launchDate: rowData[8],
       framework: rowData[10],
       da: rowData[11],
       vertical: rowData[9],
       raas: rowData[4],
-      totalAddresses: "--", // Placeholder
-      totalTransactions: "--", // Placeholder
-      transactionsToday: "--", // Placeholder
-      last30DaysTxCount: "--", // Placeholder
-      blockExplorerUrl: rowData[1].trim(), // Store block explorer URL for later use
+      l2OrL3: rowData[12], // New L2/L3 field
+      settlementWhenL3: rowData[13], // Settlement when L3 field
+      totalAddresses: "--",
+      totalTransactions: "--",
+      transactionsToday: "--",
+      last30DaysTxCount: "--",
+      blockExplorerUrl: rowData[1].trim(),
     }));
+
     console.log(parsedData); // Add this line to check if the project IDs are valid
 
     return parsedData;
