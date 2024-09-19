@@ -1,45 +1,87 @@
-// src/components/FilterBar.js
 import React from "react";
 import "./FilterBar.css";
 
-const FilterBar = () => {
+const FilterBar = ({ filters, setFilters, uniqueOptions }) => {
+  const handleFilterChange = (e) => {
+    setFilters({ ...filters, [e.target.name]: e.target.value });
+  };
+
+  if (!uniqueOptions) {
+    return null; // Avoid rendering if uniqueOptions is not ready
+  }
+
   return (
     <div className="filter-bar">
-      <select name="rollups">
-        <option value="">All Rollups (125)</option>
-        {/* Add more rollup options here */}
+      <select name="rollups" onChange={handleFilterChange}>
+        <option value="">All Rollups</option>
+        {uniqueOptions.rollups?.map((rollup, index) => (
+          <option key={index} value={rollup}>
+            {rollup}
+          </option>
+        ))}
       </select>
 
-      <select name="frameworks">
-        <option value="">All Frameworks (7)</option>
-        {/* Add more framework options here */}
+      <select name="frameworks" onChange={handleFilterChange}>
+        <option value="">All Frameworks</option>
+        {uniqueOptions.frameworks?.map((framework, index) => (
+          <option key={index} value={framework}>
+            {framework}
+          </option>
+        ))}
       </select>
 
-      <select name="das">
-        <option value="">All DAs (7)</option>
-        {/* Add more DA options here */}
+      <select name="das" onChange={handleFilterChange}>
+        <option value="">All DAs</option>
+        {uniqueOptions.das?.map((da, index) => (
+          <option key={index} value={da}>
+            {da}
+          </option>
+        ))}
       </select>
 
-      <select name="layers">
-        <option value="">All Layers (3)</option>
-        {/* Add more layer options here */}
+      <select name="verticals" onChange={handleFilterChange}>
+        <option value="">All Verticals</option>
+        {uniqueOptions.verticals?.map((vertical, index) => (
+          <option key={index} value={vertical}>
+            {vertical}
+          </option>
+        ))}
       </select>
 
-      <select name="verticals">
-        <option value="">All Verticals (13)</option>
-        {/* Add more vertical options here */}
-      </select>
-
-      <select name="raasProviders">
-        <option value="">All RaaS Providers (5)</option>
-        {/* Add more RaaS provider options here */}
+      <select name="raasProviders" onChange={handleFilterChange}>
+        <option value="">All RaaS Providers</option>
+        {uniqueOptions.raasProviders?.map((provider, index) => (
+          <option key={index} value={provider}>
+            {provider}
+          </option>
+        ))}
       </select>
 
       <div className="date-range">
-        <button>1W</button>
-        <button>1M</button>
-        <button>3M</button>
-        <button>1Y</button>
+        <button
+          className={filters.dateRange === "1W" ? "selected" : ""}
+          onClick={() => setFilters({ ...filters, dateRange: "1W" })}
+        >
+          1W
+        </button>
+        <button
+          className={filters.dateRange === "1M" ? "selected" : ""}
+          onClick={() => setFilters({ ...filters, dateRange: "1M" })}
+        >
+          1M
+        </button>
+        <button
+          className={filters.dateRange === "3M" ? "selected" : ""}
+          onClick={() => setFilters({ ...filters, dateRange: "3M" })}
+        >
+          3M
+        </button>
+        <button
+          className={filters.dateRange === "1Y" ? "selected" : ""}
+          onClick={() => setFilters({ ...filters, dateRange: "1Y" })}
+        >
+          1Y
+        </button>
       </div>
     </div>
   );

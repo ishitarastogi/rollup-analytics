@@ -1,3 +1,4 @@
+/* App.css */
 body {
   font-family: "Arial", sans-serif;
   background-color: black;
@@ -5,9 +6,14 @@ body {
 }
 
 h1 {
+  font-family: "Orbitron", sans-serif; /* Apply Orbitron font */
+  font-size: 48px; /* Increase the font size */
   text-align: center;
   padding: 20px 0;
   color: #ff3b57;
+  text-transform: uppercase; /* Make the heading uppercase for emphasis */
+  letter-spacing: 2px; /* Add some spacing between letters */
+  border-bottom: 3px solid #ff3b57; /* Add an underline to make it more terminal-like */
 }
 
 button,

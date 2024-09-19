@@ -7,16 +7,26 @@
 
 .filter-bar select,
 .date-range button {
-  padding: 10px;
+  padding: 10px 15px;
   border: none;
   background-color: #444;
-  color: #ff9505;
+  color: #ff3b57; /* Hot pink */
   border-radius: 5px;
   cursor: pointer;
   margin: 0 5px;
 }
 
+.date-range button {
+  border: 2px solid #444; /* Dark border */
+}
+
 .date-range button:hover {
-  background-color: #ff9505;
-  color: #fff;
+  background-color: #ff3b57;
+  color: #000;
+}
+
+.date-range button.active {
+  background-color: #ff3b57; /* Hot pink for active state */
+  color: #000;
+  border: 2px solid #ff3b57; /* Make border match active button */
 }

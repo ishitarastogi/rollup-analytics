@@ -1,8 +1,9 @@
 // src/App.js
 import React from "react";
-import FilterBar from "./components/FilterBar";
 import Table from "./components/Table";
 import Charts from "./components/Charts";
+import Filter from "./components/FilterBar";
+
 import "./App.css"; // Global styles
 
 function App() {
@@ -10,12 +11,11 @@ function App() {
     <div className="app">
       {/* Header or Navigation Bar */}
       <header>
-        <h1>Rollups Terminal</h1>
+        <h1>Rollup Terminal</h1>
       </header>
 
       {/* Filter Bar */}
-      <FilterBar />
-
+      <Filter />
       {/* Main Table */}
       <Table />
 
