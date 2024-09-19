@@ -16,7 +16,7 @@ const Table = () => {
     das: "",
     verticals: "",
     raasProviders: "",
-    dateRange: "1W", // Add a dateRange filter
+    dateRange: "", // Default to empty string for showing all
   });
 
   const [uniqueOptions, setUniqueOptions] = useState({
@@ -30,13 +30,11 @@ const Table = () => {
   useEffect(() => {
     const getData = async () => {
       try {
-        // First, fetch Google Sheets data and display it immediately
         const initialData = await fetchGoogleSheetData();
         setSheetData(initialData);
-        setLoading(false); // Data has been loaded
-        setError(null); // Clear any previous errors
+        setLoading(false);
+        setError(null);
 
-        // Extract unique values for filters
         const rollups = [...new Set(initialData.map((row) => row.name))];
         const frameworks = [
           ...new Set(initialData.map((row) => row.framework)),
@@ -53,17 +51,16 @@ const Table = () => {
           raasProviders,
         });
 
-        // Then, fetch block explorer data in the background
         const updatedData = await Promise.all(
           initialData.map(async (row) => {
             const updatedRow = await fetchBlockExplorerData(row);
             return updatedRow;
           })
         );
-        setSheetData(updatedData); // Update table with block explorer and TVL data
+        setSheetData(updatedData);
       } catch (error) {
         console.error("Error fetching data:", error);
-        setLoading(false); // Stop loading on error
+        setLoading(false);
         setError("Failed to fetch data. Please try again later.");
       }
     };
@@ -71,14 +68,38 @@ const Table = () => {
     getData();
   }, []);
 
+  // Get the date range limit based on the selected date range
+  const getDateRangeLimit = () => {
+    if (!filters.dateRange) return null; // Show all data if no date range selected
+
+    const now = new Date();
+    switch (filters.dateRange) {
+      case "1W":
+        return new Date(now.setDate(now.getDate() - 7));
+      case "1M":
+        return new Date(now.setMonth(now.getMonth() - 1));
+      case "3M":
+        return new Date(now.setMonth(now.getMonth() - 3));
+      case "1Y":
+        return new Date(now.setFullYear(now.getFullYear() - 1));
+      default:
+        return null;
+    }
+  };
+
   const filterData = (data) => {
+    const dateRangeLimit = getDateRangeLimit();
+
     return data.filter((row) => {
+      const rowDate = new Date(row.launchDate);
+
       return (
         (!filters.rollups || row.name === filters.rollups) &&
         (!filters.frameworks || row.framework === filters.frameworks) &&
         (!filters.das || row.da === filters.das) &&
         (!filters.verticals || row.vertical === filters.verticals) &&
-        (!filters.raasProviders || row.raas === filters.raasProviders)
+        (!filters.raasProviders || row.raas === filters.raasProviders) &&
+        (!dateRangeLimit || rowDate >= dateRangeLimit) // Show all if no date range is selected
       );
     });
   };
@@ -93,7 +114,7 @@ const Table = () => {
       <FilterBar
         filters={filters}
         setFilters={setFilters}
-        uniqueOptions={uniqueOptions} // Ensure it's not undefined
+        uniqueOptions={uniqueOptions}
       />
 
       <div className="scrollable-table">
