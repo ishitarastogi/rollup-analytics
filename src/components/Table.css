@@ -26,9 +26,11 @@ thead th {
 thead th:nth-child(2),
 thead th:nth-child(4),
 thead th:nth-child(7),
+thead th:nth-child(10),
 tbody td:nth-child(2),
 tbody td:nth-child(4),
-tbody td:nth-child(7) {
+tbody td:nth-child(7),
+tbody td:nth-child(10) {
   border-right: 2px solid #ff3b57; /* Vertical line after Launch Date, TVL, and 30 Day Tx Count */
 }
 

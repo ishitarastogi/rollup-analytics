@@ -3,21 +3,22 @@ import {
   fetchGoogleSheetData,
   fetchBlockExplorerData,
 } from "../services/fetchGoogleSheetData";
-import FilterBar from "./FilterBar"; // Import the FilterBar component
+import FilterBar from "./FilterBar";
+import ChartToggle from "./ChartToggle"; // Import the ChartToggle component
 import "./Table.css";
 
 const Table = () => {
   const [sheetData, setSheetData] = useState([]);
-  const [loading, setLoading] = useState(true); // Loading state
-  const [error, setError] = useState(null); // Error state
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
     rollups: "",
     frameworks: "",
     das: "",
     verticals: "",
     raasProviders: "",
-    l2OrL3: "", // Filter for L2/L3
-    dateRange: "All", // Default to 'All' for showing all
+    l2OrL3: "",
+    dateRange: "All",
   });
 
   const [uniqueOptions, setUniqueOptions] = useState({
@@ -26,8 +27,10 @@ const Table = () => {
     das: [],
     verticals: [],
     raasProviders: [],
-    l2OrL3: [], // Unique values for L2/L3
+    l2OrL3: [],
   });
+
+  const [raasData, setRaasData] = useState({});
 
   useEffect(() => {
     const getData = async () => {
@@ -62,6 +65,17 @@ const Table = () => {
           })
         );
         setSheetData(updatedData);
+
+        // Calculate the sum of total transactions for each RaaS provider
+        const raasTransactionSums = updatedData.reduce((acc, row) => {
+          if (!row.totalTransactions || row.totalTransactions === "--")
+            return acc;
+          const totalTransactions = Number(row.totalTransactions);
+          acc[row.raas] = (acc[row.raas] || 0) + totalTransactions;
+          return acc;
+        }, {});
+
+        setRaasData(raasTransactionSums);
       } catch (error) {
         console.error("Error fetching data:", error);
         setLoading(false);
@@ -72,39 +86,15 @@ const Table = () => {
     getData();
   }, []);
 
-  // Get the date range limit based on the selected date range
-  const getDateRangeLimit = () => {
-    if (filters.dateRange === "All") return null; // Show all data if 'All' is selected
-
-    const now = new Date();
-    switch (filters.dateRange) {
-      case "1W":
-        return new Date(now.setDate(now.getDate() - 7));
-      case "1M":
-        return new Date(now.setMonth(now.getMonth() - 1));
-      case "3M":
-        return new Date(now.setMonth(now.getMonth() - 3));
-      case "1Y":
-        return new Date(now.setFullYear(now.getFullYear() - 1));
-      default:
-        return null;
-    }
-  };
-
   const filterData = (data) => {
-    const dateRangeLimit = getDateRangeLimit();
-
     return data.filter((row) => {
-      const rowDate = new Date(row.launchDate);
-
       return (
         (!filters.rollups || row.name === filters.rollups) &&
         (!filters.frameworks || row.framework === filters.frameworks) &&
         (!filters.das || row.da === filters.das) &&
         (!filters.verticals || row.vertical === filters.verticals) &&
         (!filters.raasProviders || row.raas === filters.raasProviders) &&
-        (!filters.l2OrL3 || row.l2OrL3 === filters.l2OrL3) && // L2/L3 filter logic
-        (!dateRangeLimit || rowDate >= dateRangeLimit) // Date filter logic
+        (!filters.l2OrL3 || row.l2OrL3 === filters.l2OrL3)
       );
     });
   };
@@ -115,7 +105,6 @@ const Table = () => {
 
   return (
     <div>
-      {/* Filter Bar */}
       <FilterBar
         filters={filters}
         setFilters={setFilters}
@@ -141,8 +130,6 @@ const Table = () => {
                 <th>Vertical</th>
                 <th>RaaS Provider</th>
                 <th>L2/L3</th>
-                {filters.l2OrL3 === "L3" && <th>Settlement when L3</th>}{" "}
-                {/* Conditionally render column */}
               </tr>
             </thead>
             <tbody>
@@ -150,8 +137,8 @@ const Table = () => {
                 <tr key={index}>
                   <td>{row.name}</td>
                   <td>{row.launchDate}</td>
-                  <td>--</td> {/* Placeholder for TPS */}
-                  <td>{row.tvl || "--"}</td> {/* Display fetched TVL */}
+                  <td>--</td>
+                  <td>{row.tvl || "--"}</td>
                   <td>{row.totalTransactions}</td>
                   <td>{row.totalAddresses}</td>
                   <td>{row.last30DaysTxCount}</td>
@@ -160,16 +147,15 @@ const Table = () => {
                   <td>{row.vertical}</td>
                   <td>{row.raas}</td>
                   <td>{row.l2OrL3}</td>
-                  {filters.l2OrL3 === "L3" && (
-                    <td>{row.settlementWhenL3}</td>
-                  )}{" "}
-                  {/* Show L3 settlement if L3 */}
                 </tr>
               ))}
             </tbody>
           </table>
         )}
       </div>
+
+      {/* Adding the ChartToggle component here */}
+      <ChartToggle raasData={raasData} />
     </div>
   );
 };

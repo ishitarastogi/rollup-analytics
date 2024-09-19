@@ -1,26 +1,21 @@
-// src/App.js
 import React from "react";
 import Table from "./components/Table";
-import Charts from "./components/Charts";
-import Filter from "./components/FilterBar";
+// import Charts from "./components/Charts";
 
-import "./App.css"; // Global styles
+import "./App.css";
 
 function App() {
   return (
     <div className="app">
-      {/* Header or Navigation Bar */}
       <header>
-        <h1>Rollup Terminal</h1>
+        <h1>Rollups Terminal</h1>
       </header>
 
-      {/* Filter Bar */}
-      <Filter />
       {/* Main Table */}
       <Table />
+      {/* <Charts /> */}
 
       {/* Charts Section */}
-      <Charts />
     </div>
   );
 }
