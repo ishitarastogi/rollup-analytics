@@ -1,21 +1,43 @@
-const axios = require("axios");
+import axios from "axios";
 
 export default async function handler(req, res) {
   const { projectId } = req.query;
 
   if (!projectId) {
-    return res.status(400).json({ error: "projectId is required" });
+    return res.status(400).json({ error: "Project ID is required" });
   }
 
-  try {
-    const l2BeatUrl = `https://l2beat.com/api/trpc/tvl.chart?batch=1&input=%7B%220%22%3A%7B%22json%22%3A%7B%22filter%22%3A%7B%22type%22%3A%22projects%22%2C%22projectIds%22%3A%5B%22${projectId}%22%5D%7D%2C%22range%22%3A%22max%22%2C%22excludeAssociatedTokens%22%3Afalse%7D%7D%7D`;
+  // Construct the API URL to query L2Beat
+  const apiUrl = `https://l2beat.com/api/trpc/activity.chart?batch=1&input=${encodeURIComponent(
+    JSON.stringify({
+      0: {
+        json: {
+          filter: {
+            type: "projects",
+            projectIds: [projectId],
+          },
+          range: "max",
+          excludeAssociatedTokens: false,
+        },
+      },
+    })
+  )}`;
 
-    const response = await axios.get(l2BeatUrl);
-    res.status(200).json(response.data);
+  try {
+    const response = await axios.get(apiUrl);
+    const jsonData = response.data[0]?.result?.data?.json;
+
+    // Get the latest data point and calculate the TVL
+    if (!jsonData || jsonData.length === 0) {
+      return res.status(404).json({ error: "No data found for this project" });
+    }
+
+    const latestData = jsonData[jsonData.length - 1];
+    const tvl = (latestData[1] + latestData[2] + latestData[3]) / 100000000;
+
+    res.status(200).json({ projectId, tvl });
   } catch (error) {
-    console.error(`Error fetching TVL for project ${projectId}:`, error);
-    res
-      .status(500)
-      .json({ error: `Error fetching TVL for project ${projectId}` });
+    console.error("Error fetching data from L2Beat:", error.message);
+    res.status(500).json({ error: "Failed to fetch TVL data" });
   }
 }

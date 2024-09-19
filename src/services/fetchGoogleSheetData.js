@@ -63,6 +63,7 @@ export const fetchGoogleSheetData = async () => {
       last30DaysTxCount: "--", // Placeholder
       blockExplorerUrl: rowData[1].trim(), // Store block explorer URL for later use
     }));
+    console.log(parsedData); // Add this line to check if the project IDs are valid
 
     return parsedData;
   } catch (error) {
@@ -72,12 +73,17 @@ export const fetchGoogleSheetData = async () => {
 };
 
 const fetchTvlFromL2Beat = async (projectId) => {
-  const proxyUrl = `/api/tvl?projectId=${projectId}`; // Use projectId from the sheet
+  if (!projectId) {
+    console.error("No projectId provided!");
+    return "--"; // Fallback in case of missing projectId
+  }
+
+  const proxyUrl = `/api/tvl?projectId=${projectId}`;
+  console.log("Requesting TVL for project:", projectId);
 
   try {
     const response = await axios.get(proxyUrl, { timeout: 5000 });
     const tvlData = response.data[0]?.result?.data?.json;
-
     if (tvlData && tvlData.length > 0) {
       const lastEntry = tvlData[tvlData.length - 1];
       const tvlSum = (lastEntry[1] + lastEntry[2] + lastEntry[3]) / 100000000;
