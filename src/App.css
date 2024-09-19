@@ -1,0 +1,28 @@
+body {
+  font-family: "Arial", sans-serif;
+  background-color: black;
+  color: #ff3b57;
+}
+
+h1 {
+  text-align: center;
+  padding: 20px 0;
+  color: #ff3b57;
+}
+
+button,
+select {
+  background-color: #ff3b57;
+  color: white;
+  border: none;
+  padding: 10px;
+  margin: 0 5px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover,
+select:hover {
+  background-color: white;
+  color: #ff3b57;
+}

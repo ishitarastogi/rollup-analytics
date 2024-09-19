@@ -1,0 +1,78 @@
+/* src/components/Table.css */
+.scrollable-table {
+  max-height: 400px; /* Limit height to display around 10 rows at once */
+  overflow-y: scroll; /* Enable vertical scrolling for the whole table */
+  border: 1px solid #ff3b57;
+  margin: 20px 0;
+}
+
+table {
+  width: 100%; /* Ensure the table takes the full width */
+  border-collapse: collapse; /* Merge borders between cells */
+}
+
+thead th {
+  background-color: #ff3b57; /* Header background matching brand color */
+  color: white; /* Text color for headers */
+  padding: 10px;
+  text-transform: uppercase;
+  font-size: 12px;
+  position: sticky; /* Keep header visible when scrolling vertically */
+  top: 0;
+  z-index: 1; /* Ensure header stays above the rest */
+}
+
+/* Add vertical lines after specific columns */
+thead th:nth-child(2),
+thead th:nth-child(4),
+thead th:nth-child(7),
+tbody td:nth-child(2),
+tbody td:nth-child(4),
+tbody td:nth-child(7) {
+  border-right: 2px solid #ff3b57; /* Vertical line after Launch Date, TVL, and 30 Day Tx Count */
+}
+
+tbody td {
+  background-color: black; /* Black background for cells */
+  color: #ff3b57; /* Brand color for text */
+  padding: 8px;
+  text-align: center; /* Center align text */
+}
+
+tbody tr:nth-child(even) td {
+  background-color: #333; /* Alternate row background */
+}
+
+tbody tr:hover td {
+  background-color: #ff3b57;
+  color: white; /* Text turns white on hover */
+}
+
+/* Vertical Scrollbar */
+.scrollable-table::-webkit-scrollbar {
+  width: 8px; /* Vertical scrollbar width */
+}
+
+.scrollable-table::-webkit-scrollbar-thumb {
+  background-color: #ff3b57; /* Scrollbar thumb color */
+  border-radius: 5px; /* Rounded scrollbar thumb */
+}
+
+.scrollable-table::-webkit-scrollbar-track {
+  background-color: #333; /* Scrollbar track color */
+}
+/* src/components/Table.css */
+
+.loading-message {
+  color: #ff3b57; /* Your brand color */
+  text-align: center;
+  font-size: 18px;
+  margin: 20px;
+}
+
+.error-message {
+  color: #ff3b57;
+  text-align: center;
+  font-size: 16px;
+  margin: 20px;
+}
