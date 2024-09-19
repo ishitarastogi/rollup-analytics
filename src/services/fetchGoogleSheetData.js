@@ -83,12 +83,23 @@ const fetchTvlFromL2Beat = async (projectId) => {
 
   try {
     const response = await axios.get(proxyUrl, { timeout: 5000 });
-    const tvlData = response.data[0]?.result?.data?.json;
-    if (tvlData && tvlData.length > 0) {
-      const lastEntry = tvlData[tvlData.length - 1];
-      const tvlSum = (lastEntry[1] + lastEntry[2] + lastEntry[3]) / 100000000;
-      return tvlSum;
+    const tvlData = response.data?.tvlData;
+
+    if (!tvlData || tvlData.length === 0) {
+      console.error(`No TVL data found for project ${projectId}`);
+      return "--";
     }
+
+    // The API response is assumed to return data in the expected format
+    const lastEntry = tvlData[tvlData.length - 1];
+    if (!lastEntry || lastEntry.length < 4) {
+      console.error(`Malformed data for project ${projectId}`);
+      return "--";
+    }
+
+    // Calculate the TVL sum by adding the 2nd, 3rd, and 4th entries and dividing by 100,000,000
+    const tvlSum = (lastEntry[1] + lastEntry[2] + lastEntry[3]) / 100000000;
+    return tvlSum;
   } catch (error) {
     console.error(`Error fetching TVL for project ${projectId}:`, error);
     return "--";

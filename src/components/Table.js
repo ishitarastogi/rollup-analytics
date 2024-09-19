@@ -26,7 +26,7 @@ const Table = () => {
             return updatedRow;
           })
         );
-        setSheetData(updatedData); // Update table with block explorer data
+        setSheetData(updatedData); // Update table with block explorer and TVL data
       } catch (error) {
         console.error("Error fetching data:", error);
         setLoading(false); // Stop loading on error
@@ -67,8 +67,8 @@ const Table = () => {
               <tr key={index}>
                 <td>{row.name}</td>
                 <td>{row.launchDate}</td>
-                <td>--</td> {/* Placeholder */}
-                <td>{row.tvl || "--"}</td> {/* Display TVL */}
+                <td>--</td> {/* Placeholder for TPS */}
+                <td>{row.tvl || "--"}</td> {/* Display fetched TVL */}
                 <td>{row.totalTransactions}</td>
                 <td>{row.totalAddresses}</td>
                 <td>{row.last30DaysTxCount}</td>
