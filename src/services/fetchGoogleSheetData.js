@@ -51,6 +51,7 @@ export const fetchGoogleSheetData = async () => {
     // Create an initial parsed data with placeholders for block explorer data
     const parsedData = sheetData.map((rowData) => ({
       name: rowData[0],
+      projectId: rowData[2], // Fetch the ID from the 3rd column
       launchDate: rowData[8],
       framework: rowData[10],
       da: rowData[11],
@@ -70,18 +71,38 @@ export const fetchGoogleSheetData = async () => {
   }
 };
 
-// Fetch block explorer data separately for each row
+const fetchTvlFromL2Beat = async (projectId) => {
+  const proxyUrl = `/api/tvl?projectId=${projectId}`; // Use projectId from the sheet
+
+  try {
+    const response = await axios.get(proxyUrl, { timeout: 5000 });
+    const tvlData = response.data[0]?.result?.data?.json;
+
+    if (tvlData && tvlData.length > 0) {
+      const lastEntry = tvlData[tvlData.length - 1];
+      const tvlSum = (lastEntry[1] + lastEntry[2] + lastEntry[3]) / 100000000;
+      return tvlSum;
+    }
+  } catch (error) {
+    console.error(`Error fetching TVL for project ${projectId}:`, error);
+    return "--";
+  }
+};
+
+// Modify fetchBlockExplorerData to fetch TVL data
 export const fetchBlockExplorerData = async (dataRow) => {
   try {
     const explorerStats = await fetchExplorerStats(dataRow.blockExplorerUrl);
+    const tvl = await fetchTvlFromL2Beat(dataRow.projectId); // Fetch TVL data
 
-    // Return updated row data with fetched block explorer stats
+    // Return updated row data with fetched block explorer stats and TVL
     return {
       ...dataRow,
       totalAddresses: explorerStats.totalAddresses,
       totalTransactions: explorerStats.totalTransactions,
       transactionsToday: explorerStats.transactionsToday,
       last30DaysTxCount: explorerStats.last30DaysTxCount,
+      tvl, // Add the TVL field
     };
   } catch (error) {
     console.error("Error fetching block explorer data:", error);

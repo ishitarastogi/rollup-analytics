@@ -52,7 +52,7 @@ const Table = () => {
               <th>Rollups Name</th>
               <th>Launch Date</th>
               <th>TPS</th> {/* Placeholder */}
-              <th>TVL</th> {/* Placeholder */}
+              <th>TVL</th> {/* New TVL Column */}
               <th>Total Transactions</th>
               <th>Total Addresses</th>
               <th>30 Day Tx Count</th> {/* Placeholder */}
@@ -68,7 +68,7 @@ const Table = () => {
                 <td>{row.name}</td>
                 <td>{row.launchDate}</td>
                 <td>--</td> {/* Placeholder */}
-                <td>--</td> {/* Placeholder */}
+                <td>{row.tvl || "--"}</td> {/* Display TVL */}
                 <td>{row.totalTransactions}</td>
                 <td>{row.totalAddresses}</td>
                 <td>{row.last30DaysTxCount}</td>
