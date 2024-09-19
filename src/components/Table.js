@@ -31,6 +31,7 @@ const Table = () => {
   });
 
   const [raasData, setRaasData] = useState({});
+  const [rollupsData, setRollupsData] = useState({}); // Add state for rollupsData
 
   useEffect(() => {
     const getData = async () => {
@@ -75,7 +76,17 @@ const Table = () => {
           return acc;
         }, {});
 
+        // Calculate the sum of total transactions for each Rollup
+        const rollupsTransactionSums = updatedData.reduce((acc, row) => {
+          if (!row.totalTransactions || row.totalTransactions === "--")
+            return acc;
+          const totalTransactions = Number(row.totalTransactions);
+          acc[row.name] = (acc[row.name] || 0) + totalTransactions;
+          return acc;
+        }, {});
+
         setRaasData(raasTransactionSums);
+        setRollupsData(rollupsTransactionSums); // Set the rollupsData state
       } catch (error) {
         console.error("Error fetching data:", error);
         setLoading(false);
@@ -154,8 +165,8 @@ const Table = () => {
         )}
       </div>
 
-      {/* Adding the ChartToggle component here */}
-      <ChartToggle raasData={raasData} />
+      {/* Pass both raasData and rollupsData to the ChartToggle component */}
+      <ChartToggle raasData={raasData} rollupsData={rollupsData} />
     </div>
   );
 };
