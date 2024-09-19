@@ -110,6 +110,14 @@ const Table = () => {
     });
   };
 
+  // Filter the data to apply it to the chart as well
+  const filteredRollupsData = filterData(sheetData).reduce((acc, row) => {
+    if (!row.totalTransactions || row.totalTransactions === "--") return acc;
+    const totalTransactions = Number(row.totalTransactions);
+    acc[row.name] = totalTransactions;
+    return acc;
+  }, {});
+
   if (loading) {
     return <div className="loading-message">Loading data, please wait...</div>;
   }
@@ -165,8 +173,12 @@ const Table = () => {
         )}
       </div>
 
-      {/* Pass both raasData and rollupsData to the ChartToggle component */}
-      <ChartToggle raasData={raasData} rollupsData={rollupsData} />
+      {/* Pass filtered rollupsData to the ChartToggle component */}
+      <ChartToggle
+        raasData={raasData}
+        rollupsData={filteredRollupsData} // Pass filtered data
+        sheetData={sheetData} // Pass sheet data for color mapping
+      />
     </div>
   );
 };

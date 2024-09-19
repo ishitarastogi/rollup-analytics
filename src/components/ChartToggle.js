@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { Pie, Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -9,7 +9,8 @@ import {
   LinearScale,
   BarElement,
 } from "chart.js";
-import "./ChartToggle.css"; // Import the CSS file here
+import ChartDataLabels from "chartjs-plugin-datalabels"; // Import the data labels plugin
+import "./ChartToggle.css";
 
 ChartJS.register(
   ArcElement,
@@ -17,16 +18,18 @@ ChartJS.register(
   Legend,
   CategoryScale,
   LinearScale,
-  BarElement
+  BarElement,
+  ChartDataLabels // Register the data labels plugin
 );
 
-const ChartToggle = ({ raasData, rollupsData }) => {
+const ChartToggle = ({ raasData, rollupsData, sheetData }) => {
   const [chartType, setChartType] = useState("pie");
-  const [dataType, setDataType] = useState("raas"); // State to switch between RaaS and Rollups chart
-  const [minTx, setMinTx] = useState(0); // State for minimum transactions filter
-  const [maxTx, setMaxTx] = useState(Infinity); // State for maximum transactions filter
+  const [dataType, setDataType] = useState("raas");
+  const [minTx, setMinTx] = useState(0);
+  const [maxTx, setMaxTx] = useState(Infinity);
 
-  // Mapping the correct color to each RaaS provider
+  const chartRef = useRef(null); // Ref to access chart instance
+
   const colorMap = {
     Gelato: "#ff3b57",
     Conduit: "#46BDC6",
@@ -35,70 +38,78 @@ const ChartToggle = ({ raasData, rollupsData }) => {
     Altlayer: "#B28AFE",
   };
 
-  // Prepare data for the RaaS Provider chart (pie/bar)
-  const raasLabels = Object.keys(raasData);
-  const raasDataValues = Object.values(raasData);
-  const raasBackgroundColors = raasLabels.map(
-    (label) => colorMap[label] || "#000000"
-  );
-
-  // Prepare data for the Rollups Name chart (bar)
   let filteredRollupsLabels = [];
   let filteredRollupsDataValues = [];
+  let filteredRollupsColors = [];
 
   Object.entries(rollupsData).forEach(([label, value]) => {
     if (value >= minTx && value <= maxTx) {
       filteredRollupsLabels.push(label);
       filteredRollupsDataValues.push(value);
+
+      const rollup = sheetData.find((row) => row.name === label);
+      const rollupRaas = rollup ? rollup.raas : null;
+      filteredRollupsColors.push(colorMap[rollupRaas] || "#4185F4");
     }
   });
 
-  // Bar chart data for Rollups Name
+  let aggregatedRaasData = {};
+  filteredRollupsLabels.forEach((label, index) => {
+    const rollup = sheetData.find((row) => row.name === label);
+    const rollupRaas = rollup ? rollup.raas : null;
+
+    if (rollupRaas) {
+      if (!aggregatedRaasData[rollupRaas]) {
+        aggregatedRaasData[rollupRaas] = 0;
+      }
+      aggregatedRaasData[rollupRaas] += filteredRollupsDataValues[index];
+    }
+  });
+
+  const filteredRaasLabels = Object.keys(aggregatedRaasData);
+  const filteredRaasDataValues = Object.values(aggregatedRaasData);
+  const filteredRaasBackgroundColors = filteredRaasLabels.map(
+    (label) => colorMap[label] || "#000000"
+  );
+
   const barRollupsData = {
     labels: filteredRollupsLabels,
     datasets: [
       {
         label: "Total Transactions by Rollups Name",
         data: filteredRollupsDataValues,
-        backgroundColor: filteredRollupsLabels.map(
-          (label) => colorMap[label] || "#4185F4"
-        ), // Apply platform colors
-        borderColor: filteredRollupsLabels.map(
-          (label) => colorMap[label] || "#4185F4"
-        ),
+        backgroundColor: filteredRollupsColors,
+        borderColor: filteredRollupsColors,
         borderWidth: 1,
       },
     ],
   };
 
-  // Pie chart data for RaaS Provider
   const pieRaasData = {
-    labels: raasLabels,
+    labels: filteredRaasLabels,
     datasets: [
       {
         label: "Total Transactions by RaaS Provider",
-        data: raasDataValues,
-        backgroundColor: raasBackgroundColors, // Apply the mapped colors
+        data: filteredRaasDataValues,
+        backgroundColor: filteredRaasBackgroundColors,
         hoverOffset: 4,
       },
     ],
   };
 
-  // Bar chart data for RaaS Provider
   const barRaasData = {
-    labels: raasLabels,
+    labels: filteredRaasLabels,
     datasets: [
       {
         label: "Total Transactions by RaaS Provider",
-        data: raasDataValues,
-        backgroundColor: raasBackgroundColors,
-        borderColor: raasBackgroundColors,
+        data: filteredRaasDataValues,
+        backgroundColor: filteredRaasBackgroundColors,
+        borderColor: filteredRaasBackgroundColors,
         borderWidth: 1,
       },
     ],
   };
 
-  // Add options for pie chart to show percentage distribution
   const pieOptions = {
     plugins: {
       tooltip: {
@@ -113,6 +124,20 @@ const ChartToggle = ({ raasData, rollupsData }) => {
           },
         },
       },
+      datalabels: {
+        formatter: (value, context) => {
+          const total = context.chart.data.datasets[0].data.reduce(
+            (acc, val) => acc + val,
+            0
+          );
+          const percentage = ((value / total) * 100).toFixed(2);
+          return `${percentage}%`;
+        },
+        color: "#fff",
+        anchor: "end",
+        align: "start",
+        offset: 0,
+      },
     },
   };
 
@@ -124,9 +149,17 @@ const ChartToggle = ({ raasData, rollupsData }) => {
     setDataType(e.target.value);
   };
 
+  const downloadChart = () => {
+    const chartInstance = chartRef.current;
+    const url = chartInstance.toBase64Image();
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "chart.png";
+    link.click();
+  };
+
   return (
     <div className="chart-toggle-container">
-      {/* Dropdown for selecting between RaaS and Rollups data */}
       <div className="chart-toggle-dropdown">
         <label htmlFor="dataType">Select Data Type: </label>
         <select id="dataType" value={dataType} onChange={handleDataTypeChange}>
@@ -135,7 +168,6 @@ const ChartToggle = ({ raasData, rollupsData }) => {
         </select>
       </div>
 
-      {/* Show Pie/Bar chart selector only if RaaS is selected */}
       {dataType === "raas" && (
         <div className="chart-toggle-dropdown">
           <label htmlFor="chartType">Select Chart Type: </label>
@@ -150,7 +182,6 @@ const ChartToggle = ({ raasData, rollupsData }) => {
         </div>
       )}
 
-      {/* Show filters only for Rollups chart */}
       {dataType === "rollups" && (
         <div className="rollup-filters">
           <label htmlFor="minTx">Min Transactions: </label>
@@ -175,20 +206,23 @@ const ChartToggle = ({ raasData, rollupsData }) => {
       )}
 
       <div className="chart-wrapper">
-        {/* Show RaaS chart (Pie or Bar) */}
         {dataType === "raas" && (
           <>
             {chartType === "pie" ? (
-              <Pie data={pieRaasData} options={pieOptions} />
+              <Pie data={pieRaasData} options={pieOptions} ref={chartRef} />
             ) : (
-              <Bar data={barRaasData} />
+              <Bar data={barRaasData} ref={chartRef} />
             )}
           </>
         )}
 
-        {/* Show Rollups chart (only Bar) */}
-        {dataType === "rollups" && <Bar data={barRollupsData} />}
+        {dataType === "rollups" && <Bar data={barRollupsData} ref={chartRef} />}
       </div>
+
+      {/* Add the download button */}
+      <button onClick={downloadChart} className="download-btn">
+        Download Chart
+      </button>
     </div>
   );
 };
