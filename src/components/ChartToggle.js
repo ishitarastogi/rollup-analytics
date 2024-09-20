@@ -1,4 +1,3 @@
-// ChartToggle.js
 import React, { useState, useRef } from "react";
 import { Pie, Bar } from "react-chartjs-2";
 import {
@@ -11,7 +10,7 @@ import {
   BarElement,
 } from "chart.js";
 import ChartDataLabels from "chartjs-plugin-datalabels";
-import { FaDownload } from "react-icons/fa"; // Import the download icon
+import { FaDownload } from "react-icons/fa";
 import "./ChartToggle.css";
 
 ChartJS.register(
@@ -24,11 +23,9 @@ ChartJS.register(
   ChartDataLabels
 );
 
-const ChartToggle = ({ raasData, rollupsData, sheetData }) => {
+const ChartToggle = ({ raasData, rollupsData, sheetData, filters }) => {
   const [chartType, setChartType] = useState("pie");
   const [dataType, setDataType] = useState("raas");
-  const [minTx, setMinTx] = useState(0);
-  const [maxTx, setMaxTx] = useState(Infinity);
   const chartRef = useRef(null);
 
   const colorMap = {
@@ -39,31 +36,36 @@ const ChartToggle = ({ raasData, rollupsData, sheetData }) => {
     Altlayer: "#B28AFE",
   };
 
+  // Enhanced filter to include all desired filter options
+  const filteredRollups = sheetData.filter(
+    (row) =>
+      (!filters.raasProviders || row.raas === filters.raasProviders) &&
+      (!filters.verticals || row.vertical === filters.verticals) &&
+      (!filters.frameworks || row.framework === filters.frameworks) &&
+      (!filters.das || row.da === filters.das) &&
+      (!filters.l2OrL3 || row.l2OrL3 === filters.l2OrL3)
+  );
+
   let filteredRollupsLabels = [];
   let filteredRollupsDataValues = [];
   let filteredRollupsColors = [];
 
   Object.entries(rollupsData).forEach(([label, value]) => {
-    if (value >= minTx && value <= maxTx) {
+    const rollup = filteredRollups.find((row) => row.name === label);
+    if (rollup) {
       filteredRollupsLabels.push(label);
       filteredRollupsDataValues.push(value);
-
-      const rollup = sheetData.find((row) => row.name === label);
-      const rollupRaas = rollup ? rollup.raas : null;
-      filteredRollupsColors.push(colorMap[rollupRaas] || "#4185F4");
+      filteredRollupsColors.push(colorMap[rollup.raas] || "#4185F4");
     }
   });
 
   let aggregatedRaasData = {};
   filteredRollupsLabels.forEach((label, index) => {
-    const rollup = sheetData.find((row) => row.name === label);
-    const rollupRaas = rollup ? rollup.raas : null;
-
-    if (rollupRaas) {
-      if (!aggregatedRaasData[rollupRaas]) {
-        aggregatedRaasData[rollupRaas] = 0;
-      }
-      aggregatedRaasData[rollupRaas] += filteredRollupsDataValues[index];
+    const rollup = filteredRollups.find((row) => row.name === label);
+    if (rollup && rollup.raas) {
+      aggregatedRaasData[rollup.raas] =
+        (aggregatedRaasData[rollup.raas] || 0) +
+        filteredRollupsDataValues[index];
     }
   });
 
@@ -98,7 +100,6 @@ const ChartToggle = ({ raasData, rollupsData, sheetData }) => {
           const color = filteredRollupsColors[dataIndex];
 
           if (!chartArea) {
-            // Chart hasn't been drawn yet
             return color;
           }
 
@@ -107,9 +108,6 @@ const ChartToggle = ({ raasData, rollupsData, sheetData }) => {
         borderColor: filteredRollupsColors,
         borderWidth: 2,
         barThickness: 4,
-        hoverBackgroundColor: filteredRollupsColors.map((color) =>
-          color.replace("1)", "0.8)")
-        ),
       },
     ],
   };
@@ -141,7 +139,6 @@ const ChartToggle = ({ raasData, rollupsData, sheetData }) => {
           const color = filteredRaasBackgroundColors[dataIndex];
 
           if (!chartArea) {
-            // Chart hasn't been drawn yet
             return color;
           }
 
@@ -174,11 +171,11 @@ const ChartToggle = ({ raasData, rollupsData, sheetData }) => {
       },
     },
     layout: {
-      padding: 10, // Adjusted padding for compact design
+      padding: 10,
     },
-    cutout: "60%", // Increased the cutout for a compact pie chart
-    radius: "80%", // Decreased the radius to make the pie chart smaller
-    maintainAspectRatio: false, // Ensures the chart uses the full container space
+    cutout: "60%",
+    radius: "80%",
+    maintainAspectRatio: false,
   };
 
   const barOptions = {
@@ -207,8 +204,8 @@ const ChartToggle = ({ raasData, rollupsData, sheetData }) => {
         grid: {
           display: false,
         },
-        barPercentage: 0.8, // Reduced bar spacing for a tighter fit
-        categoryPercentage: 0.6, // Adjusted to make bars thicker
+        barPercentage: 0.8,
+        categoryPercentage: 0.6,
       },
       y: {
         ticks: {
@@ -222,7 +219,7 @@ const ChartToggle = ({ raasData, rollupsData, sheetData }) => {
         },
       },
     },
-    maintainAspectRatio: false, // Ensures the chart uses the full container space
+    maintainAspectRatio: false,
   };
 
   const handleChartTypeChange = (e) => {
@@ -273,29 +270,6 @@ const ChartToggle = ({ raasData, rollupsData, sheetData }) => {
                 <option value="pie">Pie Chart</option>
                 <option value="bar">Bar Chart</option>
               </select>
-            </div>
-          )}
-
-          {dataType === "rollups" && (
-            <div className="rollup-filters">
-              <label htmlFor="minTx">Min Transactions: </label>
-              <input
-                type="number"
-                id="minTx"
-                value={minTx === Infinity ? "" : minTx}
-                onChange={(e) =>
-                  setMinTx(e.target.value ? parseInt(e.target.value) : 0)
-                }
-              />
-              <label htmlFor="maxTx">Max Transactions: </label>
-              <input
-                type="number"
-                id="maxTx"
-                value={maxTx === Infinity ? "" : maxTx}
-                onChange={(e) =>
-                  setMaxTx(e.target.value ? parseInt(e.target.value) : Infinity)
-                }
-              />
             </div>
           )}
         </div>

@@ -131,10 +131,11 @@ tbody tr:hover td {
   background-color: #333;
 }
 
-/* Sorting arrow styles */
-th::after {
-  content: "";
+/* Sorting icon styles */
+.sort-icon {
   margin-left: 5px;
+  font-size: 12px;
+  opacity: 0.6;
 }
 
 th.sort-asc::after {

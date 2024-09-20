@@ -1,32 +1,31 @@
-// FilterBar.js
 import React from "react";
 import { FaColumns } from "react-icons/fa";
 import "./FilterBar.css";
 
-const FilterBar = ({ filters, setFilters, uniqueOptions, setShowSettings }) => {
+const FilterBar = ({
+  filters,
+  setFilters,
+  setSortConfig,
+  uniqueOptions,
+  resetFiltersAndSorting,
+  setShowSettings,
+}) => {
   const handleFilterChange = (e) => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
   };
 
   const resetFilters = () => {
-    setFilters({
-      rollups: "",
-      frameworks: "",
-      das: "",
-      verticals: "",
-      raasProviders: "",
-      l2OrL3: "",
-      dateRange: "All",
-    });
+    resetFiltersAndSorting(); // Reset both filters and sorting
   };
-
-  if (!uniqueOptions) {
-    return null; // Avoid rendering if uniqueOptions is not ready
-  }
 
   return (
     <div className="filter-bar">
-      <select name="rollups" onChange={handleFilterChange}>
+      {/* Controlled Dropdown for Rollups */}
+      <select
+        name="rollups"
+        value={filters.rollups}
+        onChange={handleFilterChange}
+      >
         <option value="">All Rollups</option>
         {uniqueOptions.rollups?.map((rollup, index) => (
           <option key={index} value={rollup}>
@@ -35,10 +34,11 @@ const FilterBar = ({ filters, setFilters, uniqueOptions, setShowSettings }) => {
         ))}
       </select>
 
+      {/* Controlled Dropdown for Frameworks */}
       <select
         name="frameworks"
+        value={filters.frameworks}
         onChange={handleFilterChange}
-        title="Filter by Frameworks"
       >
         <option value="">All Frameworks</option>
         {uniqueOptions.frameworks?.map((framework, index) => (
@@ -48,7 +48,8 @@ const FilterBar = ({ filters, setFilters, uniqueOptions, setShowSettings }) => {
         ))}
       </select>
 
-      <select name="das" onChange={handleFilterChange} title="Filter by DAs">
+      {/* Controlled Dropdown for DAs */}
+      <select name="das" value={filters.das} onChange={handleFilterChange}>
         <option value="">All DAs</option>
         {uniqueOptions.das?.map((da, index) => (
           <option key={index} value={da}>
@@ -57,10 +58,11 @@ const FilterBar = ({ filters, setFilters, uniqueOptions, setShowSettings }) => {
         ))}
       </select>
 
+      {/* Controlled Dropdown for Verticals */}
       <select
         name="verticals"
+        value={filters.verticals}
         onChange={handleFilterChange}
-        title="Filter by Verticals"
       >
         <option value="">All Verticals</option>
         {uniqueOptions.verticals?.map((vertical, index) => (
@@ -70,10 +72,11 @@ const FilterBar = ({ filters, setFilters, uniqueOptions, setShowSettings }) => {
         ))}
       </select>
 
+      {/* Controlled Dropdown for RaaS Providers */}
       <select
         name="raasProviders"
+        value={filters.raasProviders}
         onChange={handleFilterChange}
-        title="Filter by RaaS Providers"
       >
         <option value="">All RaaS Providers</option>
         {uniqueOptions.raasProviders?.map((provider, index) => (
@@ -83,11 +86,11 @@ const FilterBar = ({ filters, setFilters, uniqueOptions, setShowSettings }) => {
         ))}
       </select>
 
-      {/* L2/L3 Filter */}
+      {/* Controlled Dropdown for L2/L3 */}
       <select
         name="l2OrL3"
+        value={filters.l2OrL3}
         onChange={handleFilterChange}
-        title="Filter by L2/L3"
       >
         <option value="">All L2/L3</option>
         {uniqueOptions.l2OrL3?.map((l2OrL3, index) => (
@@ -97,57 +100,48 @@ const FilterBar = ({ filters, setFilters, uniqueOptions, setShowSettings }) => {
         ))}
       </select>
 
+      {/* Date Range Buttons */}
       <div className="date-range">
         <button
           className={filters.dateRange === "All" ? "active" : ""}
           onClick={() => setFilters({ ...filters, dateRange: "All" })}
-          title="Show all dates"
         >
           All
         </button>
         <button
           className={filters.dateRange === "1W" ? "active" : ""}
           onClick={() => setFilters({ ...filters, dateRange: "1W" })}
-          title="Last 1 Week"
         >
           1W
         </button>
         <button
           className={filters.dateRange === "1M" ? "active" : ""}
           onClick={() => setFilters({ ...filters, dateRange: "1M" })}
-          title="Last 1 Month"
         >
           1M
         </button>
         <button
           className={filters.dateRange === "3M" ? "active" : ""}
           onClick={() => setFilters({ ...filters, dateRange: "3M" })}
-          title="Last 3 Months"
         >
           3M
         </button>
         <button
           className={filters.dateRange === "1Y" ? "active" : ""}
           onClick={() => setFilters({ ...filters, dateRange: "1Y" })}
-          title="Last 1 Year"
         >
           1Y
         </button>
       </div>
 
+      {/* Filter Action Buttons */}
       <div className="filter-actions">
-        <button
-          className="reset-button"
-          onClick={resetFilters}
-          title="Reset Filters"
-        >
+        <button className="reset-button" onClick={resetFilters}>
           Reset Filters
         </button>
-
         <button
           className="columns-button"
           onClick={() => setShowSettings(true)}
-          title="Show/Hide Columns"
         >
           <FaColumns /> Columns
         </button>

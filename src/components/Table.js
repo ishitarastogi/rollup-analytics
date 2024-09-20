@@ -1,4 +1,3 @@
-// Table.js
 import React, { useState, useEffect } from "react";
 import {
   fetchGoogleSheetData,
@@ -219,51 +218,35 @@ const Table = () => {
     setSortConfig({ key: columnKey, direction });
   };
 
+  // Reset filters and sorting
+  const resetFiltersAndSorting = () => {
+    setFilters({
+      rollups: "",
+      frameworks: "",
+      das: "",
+      verticals: "",
+      raasProviders: "",
+      l2OrL3: "",
+      dateRange: "All",
+    });
+    setSortConfig({ key: null, direction: "asc" }); // Reset sorting
+  };
+
   // Determine if any row has L2/L3 as 'L3' to conditionally display the Settlement column
   const hasL3 = sortedData.some((row) => row.l2OrL3 === "L3");
-
-  // Prepare data for charts
-  const filteredRollupsData = sortedData.reduce((acc, row) => {
-    if (!row.totalTransactions || row.totalTransactions === "--") return acc;
-    const totalTransactions = Number(row.totalTransactions);
-    acc[row.name] = totalTransactions;
-    return acc;
-  }, {});
-
-  const filteredAddressesData = sortedData.reduce((acc, row) => {
-    if (!row.totalAddresses || row.totalAddresses === "--") return acc;
-    const totalAddresses = Number(row.totalAddresses);
-    acc[row.name] = totalAddresses;
-    return acc;
-  }, {});
 
   if (loading) {
     return <div className="loading-message">Loading data, please wait...</div>;
   }
-
-  const columnKeys = [
-    "name",
-    "launchDate",
-    "tps",
-    "tvl",
-    "totalTransactions",
-    "totalAddresses",
-    "transactionsToday",
-    "last30DaysTxCount",
-    "l2OrL3",
-    "settlement",
-    "framework",
-    "da",
-    "vertical",
-    "raas",
-  ];
 
   return (
     <div>
       <FilterBar
         filters={filters}
         setFilters={setFilters}
+        setSortConfig={setSortConfig}
         uniqueOptions={uniqueOptions}
+        resetFiltersAndSorting={resetFiltersAndSorting}
         setShowSettings={setShowSettings}
       />
 
@@ -272,7 +255,7 @@ const Table = () => {
         <div className="modal-overlay" onClick={() => setShowSettings(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h2>Column Settings</h2>
-            {columnKeys.map((columnKey) => (
+            {Object.keys(columnVisibility).map((columnKey) => (
               <label key={columnKey}>
                 <input
                   type="checkbox"
@@ -318,7 +301,7 @@ const Table = () => {
                         : ""
                     }
                   >
-                    Rollups Name
+                    Rollups Name <span className="sort-icon">⇅</span>
                   </th>
                 )}
                 {columnVisibility.launchDate && (
@@ -332,7 +315,7 @@ const Table = () => {
                         : ""
                     }
                   >
-                    Launch Date
+                    Launch Date <span className="sort-icon">⇅</span>
                   </th>
                 )}
                 {columnVisibility.tps && (
@@ -346,7 +329,7 @@ const Table = () => {
                         : ""
                     }
                   >
-                    TPS
+                    TPS <span className="sort-icon">⇅</span>
                   </th>
                 )}
                 {columnVisibility.tvl && (
@@ -360,7 +343,7 @@ const Table = () => {
                         : ""
                     }
                   >
-                    TVL
+                    TVL <span className="sort-icon">⇅</span>
                   </th>
                 )}
                 {columnVisibility.totalTransactions && (
@@ -374,7 +357,7 @@ const Table = () => {
                         : ""
                     }
                   >
-                    Total Transactions
+                    Total Transactions <span className="sort-icon">⇅</span>
                   </th>
                 )}
                 {columnVisibility.totalAddresses && (
@@ -388,7 +371,7 @@ const Table = () => {
                         : ""
                     }
                   >
-                    Total Addresses
+                    Total Addresses <span className="sort-icon">⇅</span>
                   </th>
                 )}
                 {columnVisibility.transactionsToday && (
@@ -402,7 +385,7 @@ const Table = () => {
                         : ""
                     }
                   >
-                    Daily Transactions
+                    Daily Transactions <span className="sort-icon">⇅</span>
                   </th>
                 )}
                 {columnVisibility.last30DaysTxCount && (
@@ -416,7 +399,7 @@ const Table = () => {
                         : ""
                     }
                   >
-                    30 Day Tx Count
+                    30 Day Tx Count <span className="sort-icon">⇅</span>
                   </th>
                 )}
                 {columnVisibility.l2OrL3 && (
@@ -430,7 +413,7 @@ const Table = () => {
                         : ""
                     }
                   >
-                    L2/L3
+                    L2/L3 <span className="sort-icon">⇅</span>
                   </th>
                 )}
                 {hasL3 && columnVisibility.settlement && (
@@ -444,7 +427,7 @@ const Table = () => {
                         : ""
                     }
                   >
-                    Settlement
+                    Settlement <span className="sort-icon">⇅</span>
                   </th>
                 )}
                 {columnVisibility.framework && (
@@ -458,7 +441,7 @@ const Table = () => {
                         : ""
                     }
                   >
-                    Framework
+                    Framework <span className="sort-icon">⇅</span>
                   </th>
                 )}
                 {columnVisibility.da && (
@@ -472,7 +455,7 @@ const Table = () => {
                         : ""
                     }
                   >
-                    DA
+                    DA <span className="sort-icon">⇅</span>
                   </th>
                 )}
                 {columnVisibility.vertical && (
@@ -486,7 +469,7 @@ const Table = () => {
                         : ""
                     }
                   >
-                    Vertical
+                    Vertical <span className="sort-icon">⇅</span>
                   </th>
                 )}
                 {columnVisibility.raas && (
@@ -500,7 +483,7 @@ const Table = () => {
                         : ""
                     }
                   >
-                    RaaS Provider
+                    RaaS Provider <span className="sort-icon">⇅</span>
                   </th>
                 )}
               </tr>
@@ -542,14 +525,16 @@ const Table = () => {
       <div className="charts-container">
         <ChartToggle
           raasData={raasData}
-          rollupsData={filteredRollupsData}
+          rollupsData={rollupsData}
           sheetData={sheetData}
+          filters={filters} // Pass filters to ChartToggle
         />
 
         <ChartToggleAddresses
           raasData={raasData}
-          rollupsData={filteredAddressesData}
+          rollupsData={addressesData}
           sheetData={sheetData}
+          filters={filters} // Pass filters to ChartToggleAddresses
         />
       </div>
     </div>
