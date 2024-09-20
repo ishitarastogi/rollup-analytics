@@ -43,15 +43,15 @@ const Table = () => {
     totalAddresses: true,
     transactionsToday: true,
     last30DaysTxCount: true,
+    l2OrL3: true,
     settlement: true,
     framework: false,
     da: false,
     vertical: false,
     raas: false,
-    l2OrL3: true,
   });
 
-  // State for toggling the settings dropdown
+  // State for toggling the settings modal
   const [showSettings, setShowSettings] = useState(false);
 
   // Data for charts
@@ -207,24 +207,38 @@ const Table = () => {
     return <div className="loading-message">Loading data, please wait...</div>;
   }
 
+  const columnKeys = [
+    "name",
+    "launchDate",
+    "tps",
+    "tvl",
+    "totalTransactions",
+    "totalAddresses",
+    "transactionsToday",
+    "last30DaysTxCount",
+    "l2OrL3",
+    "settlement",
+    "framework",
+    "da",
+    "vertical",
+    "raas",
+  ];
+
   return (
     <div>
       <FilterBar
         filters={filters}
         setFilters={setFilters}
         uniqueOptions={uniqueOptions}
+        setShowSettings={setShowSettings}
       />
 
-      <div className="table-settings">
-        <button
-          className="settings-button"
-          onClick={() => setShowSettings(!showSettings)}
-        >
-          <FaCog />
-        </button>
-        {showSettings && (
-          <div className="settings-dropdown">
-            {Object.keys(columnVisibility).map((columnKey) => (
+      {/* Settings Modal */}
+      {showSettings && (
+        <div className="modal-overlay" onClick={() => setShowSettings(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2>Column Settings</h2>
+            {columnKeys.map((columnKey) => (
               <label key={columnKey}>
                 <input
                   type="checkbox"
@@ -242,9 +256,15 @@ const Table = () => {
                     columnKey.slice(1).replace(/([A-Z])/g, " $1")}
               </label>
             ))}
+            <button
+              className="close-button"
+              onClick={() => setShowSettings(false)}
+            >
+              Close
+            </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="scrollable-table">
         {error ? (
@@ -265,12 +285,12 @@ const Table = () => {
                   <th>Daily Transactions</th>
                 )}
                 {columnVisibility.last30DaysTxCount && <th>30 Day Tx Count</th>}
+                {columnVisibility.l2OrL3 && <th>L2/L3</th>}
                 {hasL3 && columnVisibility.settlement && <th>Settlement</th>}
                 {columnVisibility.framework && <th>Framework</th>}
                 {columnVisibility.da && <th>DA</th>}
                 {columnVisibility.vertical && <th>Vertical</th>}
                 {columnVisibility.raas && <th>RaaS Provider</th>}
-                {columnVisibility.l2OrL3 && <th>L2/L3</th>}
               </tr>
             </thead>
             <tbody>
@@ -292,6 +312,7 @@ const Table = () => {
                   {columnVisibility.last30DaysTxCount && (
                     <td>{formatNumber(Number(row.last30DaysTxCount))}</td>
                   )}
+                  {columnVisibility.l2OrL3 && <td>{row.l2OrL3}</td>}
                   {hasL3 && columnVisibility.settlement && (
                     <td>{row.l2OrL3 === "L3" ? row.settlement : "--"}</td>
                   )}
@@ -299,7 +320,6 @@ const Table = () => {
                   {columnVisibility.da && <td>{row.da}</td>}
                   {columnVisibility.vertical && <td>{row.vertical}</td>}
                   {columnVisibility.raas && <td>{row.raas}</td>}
-                  {columnVisibility.l2OrL3 && <td>{row.l2OrL3}</td>}
                 </tr>
               ))}
             </tbody>

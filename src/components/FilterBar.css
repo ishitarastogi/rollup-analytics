@@ -1,8 +1,16 @@
+/* FilterBar.css */
 .filter-bar {
   display: flex;
-  justify-content: space-around;
+  justify-content: space-between;
+  align-items: center;
   padding: 20px;
   background-color: #333;
+}
+
+.filter-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .filter-bar select,
@@ -14,6 +22,11 @@
   border-radius: 5px;
   cursor: pointer;
   margin: 0 5px;
+}
+
+.date-range {
+  display: flex;
+  flex-wrap: wrap;
 }
 
 .date-range button {
@@ -29,4 +42,12 @@
   background-color: #ff3b57; /* Hot pink for active state */
   color: #000;
   border: 2px solid #ff3b57; /* Make border match active button */
+}
+
+.settings-button {
+  background: none;
+  border: none;
+  color: #ff3b57;
+  font-size: 24px;
+  cursor: pointer;
 }

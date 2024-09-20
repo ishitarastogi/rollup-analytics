@@ -1,3 +1,4 @@
+// ChartToggle.js
 import React, { useState, useRef } from "react";
 import { Pie, Bar } from "react-chartjs-2";
 import {
@@ -72,8 +73,13 @@ const ChartToggle = ({ raasData, rollupsData, sheetData }) => {
     (label) => colorMap[label] || "#000000"
   );
 
-  const createGradient = (ctx, color) => {
-    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+  const createGradient = (ctx, chartArea, color) => {
+    const gradient = ctx.createLinearGradient(
+      0,
+      chartArea.bottom,
+      0,
+      chartArea.top
+    );
     gradient.addColorStop(0, color);
     gradient.addColorStop(1, "rgba(255,255,255,0)");
     return gradient;
@@ -85,9 +91,19 @@ const ChartToggle = ({ raasData, rollupsData, sheetData }) => {
       {
         label: "Total Transactions by Rollups Name",
         data: filteredRollupsDataValues,
-        backgroundColor: filteredRollupsColors.map((color) =>
-          createGradient(chartRef.current?.ctx, color)
-        ),
+        backgroundColor: function (context) {
+          const { chart, dataIndex } = context;
+          const ctx = chart.ctx;
+          const chartArea = chart.chartArea;
+          const color = filteredRollupsColors[dataIndex];
+
+          if (!chartArea) {
+            // Chart hasn't been drawn yet
+            return color;
+          }
+
+          return createGradient(ctx, chartArea, color);
+        },
         borderColor: filteredRollupsColors,
         borderWidth: 2,
         barThickness: 4,
@@ -118,9 +134,19 @@ const ChartToggle = ({ raasData, rollupsData, sheetData }) => {
       {
         label: "Total Transactions by RaaS Provider",
         data: filteredRaasDataValues,
-        backgroundColor: filteredRaasBackgroundColors.map((color) =>
-          createGradient(chartRef.current?.ctx, color)
-        ),
+        backgroundColor: function (context) {
+          const { chart, dataIndex } = context;
+          const ctx = chart.ctx;
+          const chartArea = chart.chartArea;
+          const color = filteredRaasBackgroundColors[dataIndex];
+
+          if (!chartArea) {
+            // Chart hasn't been drawn yet
+            return color;
+          }
+
+          return createGradient(ctx, chartArea, color);
+        },
         borderColor: filteredRaasBackgroundColors,
         borderWidth: 2,
       },
