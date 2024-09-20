@@ -205,7 +205,7 @@ const ChartToggle = ({ raasData, rollupsData, sheetData }) => {
   return (
     <div className="chart-toggle-container">
       <div className="chart-toggle-dropdown">
-        <label htmlFor="dataType">Select Data Type: </label>
+        <label htmlFor="dataType">Select Metrics: </label>
         <select id="dataType" value={dataType} onChange={handleDataTypeChange}>
           <option value="raas">Total Transactions by RaaS Provider</option>
           <option value="rollups">Total Transactions by Rollups Name</option>

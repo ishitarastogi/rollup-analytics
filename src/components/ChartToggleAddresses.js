@@ -1,3 +1,4 @@
+// ChartToggleAddresses.js
 import React, { useState, useRef } from "react";
 import { Pie, Bar } from "react-chartjs-2";
 import {
@@ -23,11 +24,11 @@ ChartJS.register(
   ChartDataLabels
 );
 
-const ChartToggle = ({ raasData, rollupsData, sheetData }) => {
+const ChartToggleAddresses = ({ raasData, rollupsData, sheetData }) => {
   const [chartType, setChartType] = useState("pie");
   const [dataType, setDataType] = useState("raas");
-  const [minTx, setMinTx] = useState(0);
-  const [maxTx, setMaxTx] = useState(Infinity);
+  const [minAddresses, setMinAddresses] = useState(0);
+  const [maxAddresses, setMaxAddresses] = useState(Infinity);
   const chartRef = useRef(null);
 
   const colorMap = {
@@ -43,7 +44,7 @@ const ChartToggle = ({ raasData, rollupsData, sheetData }) => {
   let filteredRollupsColors = [];
 
   Object.entries(rollupsData).forEach(([label, value]) => {
-    if (value >= minTx && value <= maxTx) {
+    if (value >= minAddresses && value <= maxAddresses) {
       filteredRollupsLabels.push(label);
       filteredRollupsDataValues.push(value);
 
@@ -83,7 +84,7 @@ const ChartToggle = ({ raasData, rollupsData, sheetData }) => {
     labels: filteredRollupsLabels,
     datasets: [
       {
-        label: "Total Transactions by Rollups Name",
+        label: "Total Addresses by Rollups Name",
         data: filteredRollupsDataValues,
         backgroundColor: filteredRollupsColors.map((color) =>
           createGradient(chartRef.current?.ctx, color)
@@ -102,7 +103,7 @@ const ChartToggle = ({ raasData, rollupsData, sheetData }) => {
     labels: filteredRaasLabels,
     datasets: [
       {
-        label: "Total Transactions by RaaS Provider",
+        label: "Total Addresses by RaaS Provider",
         data: filteredRaasDataValues,
         backgroundColor: filteredRaasBackgroundColors,
         hoverOffset: 4,
@@ -116,7 +117,7 @@ const ChartToggle = ({ raasData, rollupsData, sheetData }) => {
     labels: filteredRaasLabels,
     datasets: [
       {
-        label: "Total Transactions by RaaS Provider",
+        label: "Total Addresses by RaaS Provider",
         data: filteredRaasDataValues,
         backgroundColor: filteredRaasBackgroundColors.map((color) =>
           createGradient(chartRef.current?.ctx, color)
@@ -141,18 +142,18 @@ const ChartToggle = ({ raasData, rollupsData, sheetData }) => {
         color: "#fff",
         font: {
           weight: "bold",
-          size: 14,
+          size: 16,
         },
         textShadowBlur: 6,
         textShadowColor: "rgba(0, 0, 0, 0.7)",
       },
     },
     layout: {
-      padding: 10, // Adjusted padding for compact design
+      padding: 30,
     },
-    cutout: "60%", // Increased the cutout for a compact pie chart
-    radius: "80%", // Decreased the radius to make the pie chart smaller
-    maintainAspectRatio: false, // Ensures the chart uses the full container space
+    cutout: "50%",
+    radius: "95%",
+    maintainAspectRatio: false, // Ensure the chart uses the full container space
   };
 
   const barOptions = {
@@ -181,8 +182,6 @@ const ChartToggle = ({ raasData, rollupsData, sheetData }) => {
         grid: {
           display: false,
         },
-        barPercentage: 0.8, // Reduced bar spacing for a tighter fit
-        categoryPercentage: 0.6, // Adjusted to make bars thicker
       },
       y: {
         ticks: {
@@ -196,7 +195,7 @@ const ChartToggle = ({ raasData, rollupsData, sheetData }) => {
         },
       },
     },
-    maintainAspectRatio: false, // Ensures the chart uses the full container space
+    maintainAspectRatio: false, // Ensure the chart uses the full container space
   };
 
   const handleChartTypeChange = (e) => {
@@ -229,13 +228,10 @@ const ChartToggle = ({ raasData, rollupsData, sheetData }) => {
               value={dataType}
               onChange={handleDataTypeChange}
             >
-              <option value="raas">Total Transactions by RaaS Provider</option>
-              <option value="rollups">
-                Total Transactions by Rollups Name
-              </option>
+              <option value="raas">Total Addresses by RaaS Provider</option>
+              <option value="rollups">Total Addresses by Rollups Name</option>
             </select>
           </div>
-
           {dataType === "raas" && (
             <div className="chart-toggle-dropdown">
               <label htmlFor="chartType">Select Chart Type: </label>
@@ -249,36 +245,35 @@ const ChartToggle = ({ raasData, rollupsData, sheetData }) => {
               </select>
             </div>
           )}
-
           {dataType === "rollups" && (
             <div className="rollup-filters">
-              <label htmlFor="minTx">Min Transactions: </label>
+              <label htmlFor="minAddresses">Min Addresses: </label>
               <input
                 type="number"
-                id="minTx"
-                value={minTx === Infinity ? "" : minTx}
+                id="minAddresses"
+                value={minAddresses === Infinity ? "" : minAddresses}
                 onChange={(e) =>
-                  setMinTx(e.target.value ? parseInt(e.target.value) : 0)
+                  setMinAddresses(e.target.value ? parseInt(e.target.value) : 0)
                 }
               />
-              <label htmlFor="maxTx">Max Transactions: </label>
+              <label htmlFor="maxAddresses">Max Addresses: </label>
               <input
                 type="number"
-                id="maxTx"
-                value={maxTx === Infinity ? "" : maxTx}
+                id="maxAddresses"
+                value={maxAddresses === Infinity ? "" : maxAddresses}
                 onChange={(e) =>
-                  setMaxTx(e.target.value ? parseInt(e.target.value) : Infinity)
+                  setMaxAddresses(
+                    e.target.value ? parseInt(e.target.value) : Infinity
+                  )
                 }
               />
             </div>
           )}
         </div>
-
         <button onClick={downloadChart} className="download-icon">
           <FaDownload />
         </button>
       </div>
-
       <div className="chart-wrapper">
         {dataType === "raas" && (
           <>
@@ -298,4 +293,4 @@ const ChartToggle = ({ raasData, rollupsData, sheetData }) => {
   );
 };
 
-export default ChartToggle;
+export default ChartToggleAddresses;

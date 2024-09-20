@@ -1,13 +1,17 @@
+// Table.js
 import React, { useState, useEffect } from "react";
 import {
   fetchGoogleSheetData,
   fetchBlockExplorerData,
 } from "../services/fetchGoogleSheetData";
 import FilterBar from "./FilterBar";
-import ChartToggle from "./ChartToggle"; // Import the ChartToggle component
+import ChartToggle from "./ChartToggle";
+import ChartToggleAddresses from "./ChartToggleAddresses";
+import { FaCog } from "react-icons/fa"; // Import settings icon
 import "./Table.css";
 
 const Table = () => {
+  // **State Variables**
   const [sheetData, setSheetData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,7 +24,6 @@ const Table = () => {
     l2OrL3: "",
     dateRange: "All",
   });
-
   const [uniqueOptions, setUniqueOptions] = useState({
     rollups: [],
     frameworks: [],
@@ -30,16 +33,37 @@ const Table = () => {
     l2OrL3: [],
   });
 
+  // State for column visibility
+  const [columnVisibility, setColumnVisibility] = useState({
+    name: true,
+    launchDate: true,
+    tps: false,
+    tvl: true,
+    totalTransactions: true,
+    totalAddresses: true,
+    transactionsToday: true,
+    last30DaysTxCount: true,
+    settlement: true,
+    framework: false,
+    da: false,
+    vertical: false,
+    raas: false,
+    l2OrL3: true,
+  });
+
+  // State for toggling the settings dropdown
+  const [showSettings, setShowSettings] = useState(false);
+
+  // Data for charts
   const [raasData, setRaasData] = useState({});
-  const [rollupsData, setRollupsData] = useState({}); // Add state for rollupsData
+  const [rollupsData, setRollupsData] = useState({});
+  const [addressesData, setAddressesData] = useState({});
 
   useEffect(() => {
     const getData = async () => {
       try {
         const initialData = await fetchGoogleSheetData();
         setSheetData(initialData);
-        setLoading(false);
-        setError(null);
 
         const rollups = [...new Set(initialData.map((row) => row.name))];
         const frameworks = [
@@ -67,7 +91,6 @@ const Table = () => {
         );
         setSheetData(updatedData);
 
-        // Calculate the sum of total transactions for each RaaS provider
         const raasTransactionSums = updatedData.reduce((acc, row) => {
           if (!row.totalTransactions || row.totalTransactions === "--")
             return acc;
@@ -76,7 +99,6 @@ const Table = () => {
           return acc;
         }, {});
 
-        // Calculate the sum of total transactions for each Rollup
         const rollupsTransactionSums = updatedData.reduce((acc, row) => {
           if (!row.totalTransactions || row.totalTransactions === "--")
             return acc;
@@ -85,8 +107,18 @@ const Table = () => {
           return acc;
         }, {});
 
+        const addressesTransactionSums = updatedData.reduce((acc, row) => {
+          if (!row.totalAddresses || row.totalAddresses === "--") return acc;
+          const totalAddresses = Number(row.totalAddresses);
+          acc[row.name] = (acc[row.name] || 0) + totalAddresses;
+          return acc;
+        }, {});
+
         setRaasData(raasTransactionSums);
-        setRollupsData(rollupsTransactionSums); // Set the rollupsData state
+        setRollupsData(rollupsTransactionSums);
+        setAddressesData(addressesTransactionSums);
+        setLoading(false); // <-- Move setLoading(false) here
+        setError(null);
       } catch (error) {
         console.error("Error fetching data:", error);
         setLoading(false);
@@ -97,9 +129,50 @@ const Table = () => {
     getData();
   }, []);
 
+  // Helper function to format numbers
+  const formatNumber = (num) => {
+    if (num === "--" || isNaN(num)) return "--";
+    if (num >= 1e9) return (num / 1e9).toFixed(2) + "B";
+    if (num >= 1e6) return (num / 1e6).toFixed(2) + "M";
+    if (num >= 1e3) return (num / 1e3).toFixed(2) + "K";
+    return num.toString();
+  };
+
+  // Updated filterData function with date range filtering
   const filterData = (data) => {
     return data.filter((row) => {
+      const now = new Date();
+      const launchDate = new Date(row.launchDate);
+      let dateMatch = true;
+
+      if (filters.dateRange !== "All") {
+        const timeDiff = now - launchDate;
+        const oneDay = 24 * 60 * 60 * 1000;
+        const oneWeek = oneDay * 7;
+        const oneMonth = oneDay * 30;
+        const threeMonths = oneDay * 90;
+        const oneYear = oneDay * 365;
+
+        switch (filters.dateRange) {
+          case "1W":
+            dateMatch = timeDiff <= oneWeek;
+            break;
+          case "1M":
+            dateMatch = timeDiff <= oneMonth;
+            break;
+          case "3M":
+            dateMatch = timeDiff <= threeMonths;
+            break;
+          case "1Y":
+            dateMatch = timeDiff <= oneYear;
+            break;
+          default:
+            dateMatch = true;
+        }
+      }
+
       return (
+        dateMatch &&
         (!filters.rollups || row.name === filters.rollups) &&
         (!filters.frameworks || row.framework === filters.frameworks) &&
         (!filters.das || row.da === filters.das) &&
@@ -110,11 +183,23 @@ const Table = () => {
     });
   };
 
-  // Filter the data to apply it to the chart as well
-  const filteredRollupsData = filterData(sheetData).reduce((acc, row) => {
+  const filteredData = filterData(sheetData);
+
+  // Determine if any row has L2/L3 as 'L3' to conditionally display the Settlement column
+  const hasL3 = filteredData.some((row) => row.l2OrL3 === "L3");
+
+  // Prepare data for charts
+  const filteredRollupsData = filteredData.reduce((acc, row) => {
     if (!row.totalTransactions || row.totalTransactions === "--") return acc;
     const totalTransactions = Number(row.totalTransactions);
     acc[row.name] = totalTransactions;
+    return acc;
+  }, {});
+
+  const filteredAddressesData = filteredData.reduce((acc, row) => {
+    if (!row.totalAddresses || row.totalAddresses === "--") return acc;
+    const totalAddresses = Number(row.totalAddresses);
+    acc[row.name] = totalAddresses;
     return acc;
   }, {});
 
@@ -130,6 +215,37 @@ const Table = () => {
         uniqueOptions={uniqueOptions}
       />
 
+      <div className="table-settings">
+        <button
+          className="settings-button"
+          onClick={() => setShowSettings(!showSettings)}
+        >
+          <FaCog />
+        </button>
+        {showSettings && (
+          <div className="settings-dropdown">
+            {Object.keys(columnVisibility).map((columnKey) => (
+              <label key={columnKey}>
+                <input
+                  type="checkbox"
+                  checked={columnVisibility[columnKey]}
+                  onChange={() =>
+                    setColumnVisibility({
+                      ...columnVisibility,
+                      [columnKey]: !columnVisibility[columnKey],
+                    })
+                  }
+                />
+                {columnKey === "l2OrL3"
+                  ? "L2/L3"
+                  : columnKey.charAt(0).toUpperCase() +
+                    columnKey.slice(1).replace(/([A-Z])/g, " $1")}
+              </label>
+            ))}
+          </div>
+        )}
+      </div>
+
       <div className="scrollable-table">
         {error ? (
           <div className="error-message">{error}</div>
@@ -137,35 +253,53 @@ const Table = () => {
           <table>
             <thead>
               <tr>
-                <th>Rollups Name</th>
-                <th>Launch Date</th>
-                <th>TPS</th>
-                <th>TVL</th>
-                <th>Total Transactions</th>
-                <th>Total Addresses</th>
-                <th>30 Day Tx Count</th>
-                <th>Framework</th>
-                <th>DA</th>
-                <th>Vertical</th>
-                <th>RaaS Provider</th>
-                <th>L2/L3</th>
+                {columnVisibility.name && <th>Rollups Name</th>}
+                {columnVisibility.launchDate && <th>Launch Date</th>}
+                {columnVisibility.tps && <th>TPS</th>}
+                {columnVisibility.tvl && <th>TVL</th>}
+                {columnVisibility.totalTransactions && (
+                  <th>Total Transactions</th>
+                )}
+                {columnVisibility.totalAddresses && <th>Total Addresses</th>}
+                {columnVisibility.transactionsToday && (
+                  <th>Daily Transactions</th>
+                )}
+                {columnVisibility.last30DaysTxCount && <th>30 Day Tx Count</th>}
+                {hasL3 && columnVisibility.settlement && <th>Settlement</th>}
+                {columnVisibility.framework && <th>Framework</th>}
+                {columnVisibility.da && <th>DA</th>}
+                {columnVisibility.vertical && <th>Vertical</th>}
+                {columnVisibility.raas && <th>RaaS Provider</th>}
+                {columnVisibility.l2OrL3 && <th>L2/L3</th>}
               </tr>
             </thead>
             <tbody>
-              {filterData(sheetData).map((row, index) => (
+              {filteredData.map((row, index) => (
                 <tr key={index}>
-                  <td>{row.name}</td>
-                  <td>{row.launchDate}</td>
-                  <td>--</td>
-                  <td>{row.tvl || "--"}</td>
-                  <td>{row.totalTransactions}</td>
-                  <td>{row.totalAddresses}</td>
-                  <td>{row.last30DaysTxCount}</td>
-                  <td>{row.framework}</td>
-                  <td>{row.da}</td>
-                  <td>{row.vertical}</td>
-                  <td>{row.raas}</td>
-                  <td>{row.l2OrL3}</td>
+                  {columnVisibility.name && <td>{row.name}</td>}
+                  {columnVisibility.launchDate && <td>{row.launchDate}</td>}
+                  {columnVisibility.tps && <td>--</td>}
+                  {columnVisibility.tvl && <td>{row.tvl || "--"}</td>}
+                  {columnVisibility.totalTransactions && (
+                    <td>{formatNumber(Number(row.totalTransactions))}</td>
+                  )}
+                  {columnVisibility.totalAddresses && (
+                    <td>{formatNumber(Number(row.totalAddresses))}</td>
+                  )}
+                  {columnVisibility.transactionsToday && (
+                    <td>{formatNumber(Number(row.transactionsToday))}</td>
+                  )}
+                  {columnVisibility.last30DaysTxCount && (
+                    <td>{formatNumber(Number(row.last30DaysTxCount))}</td>
+                  )}
+                  {hasL3 && columnVisibility.settlement && (
+                    <td>{row.l2OrL3 === "L3" ? row.settlement : "--"}</td>
+                  )}
+                  {columnVisibility.framework && <td>{row.framework}</td>}
+                  {columnVisibility.da && <td>{row.da}</td>}
+                  {columnVisibility.vertical && <td>{row.vertical}</td>}
+                  {columnVisibility.raas && <td>{row.raas}</td>}
+                  {columnVisibility.l2OrL3 && <td>{row.l2OrL3}</td>}
                 </tr>
               ))}
             </tbody>
@@ -173,12 +307,19 @@ const Table = () => {
         )}
       </div>
 
-      {/* Pass filtered rollupsData to the ChartToggle component */}
-      <ChartToggle
-        raasData={raasData}
-        rollupsData={filteredRollupsData} // Pass filtered data
-        sheetData={sheetData} // Pass sheet data for color mapping
-      />
+      <div className="charts-container">
+        <ChartToggle
+          raasData={raasData}
+          rollupsData={filteredRollupsData}
+          sheetData={sheetData}
+        />
+
+        <ChartToggleAddresses
+          raasData={raasData}
+          rollupsData={filteredAddressesData}
+          sheetData={sheetData}
+        />
+      </div>
     </div>
   );
 };

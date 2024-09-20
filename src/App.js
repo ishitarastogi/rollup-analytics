@@ -8,7 +8,7 @@ function App() {
   return (
     <div className="app">
       <header>
-        <h1>Rollups Terminal</h1>
+        <h1>Rollup Terminal</h1>
       </header>
 
       {/* Main Table */}

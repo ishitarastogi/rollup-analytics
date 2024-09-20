@@ -1,3 +1,4 @@
+// fetchGoogleSheetData.js
 import axios from "axios";
 
 // Replace with your own Google Sheets URL and API key
@@ -10,8 +11,10 @@ const fetchExplorerStats = async (blockExplorerUrl) => {
     const statsResponse = await axios.get(`${blockExplorerUrl}/api/v2/stats`, {
       timeout: 5000,
     });
+
     const chartsResponse = await axios.get(
-      `${blockExplorerUrl}/api/v2/stats/charts/transactions`
+      `${blockExplorerUrl}/api/v2/stats/charts/transactions`,
+      { timeout: 5000 }
     );
 
     const totalAddresses = statsResponse.data.total_addresses;
@@ -43,27 +46,30 @@ const fetchExplorerStats = async (blockExplorerUrl) => {
 };
 
 // Fetch Google Sheets data directly using the Google Sheets API
+// Fetch Google Sheets data directly using the Google Sheets API
 export const fetchGoogleSheetData = async () => {
   try {
     const response = await axios.get(GOOGLE_SHEET_URL, { timeout: 5000 });
-    const sheetData = response.data.values; // This contains the actual data from the sheet
+    const sheetData = response.data.values;
 
     // Create an initial parsed data with placeholders for block explorer data
     const parsedData = sheetData.map((rowData) => ({
       name: rowData[0],
-      projectId: rowData[2], // Fetch the ID from the 3rd column
+      blockExplorerUrl: rowData[1]?.trim(),
+      projectId: rowData[2],
+      raas: rowData[4],
       launchDate: rowData[8],
+      vertical: rowData[9],
       framework: rowData[10],
       da: rowData[11],
-      vertical: rowData[9],
-      raas: rowData[4],
-      totalAddresses: "--", // Placeholder
-      totalTransactions: "--", // Placeholder
-      transactionsToday: "--", // Placeholder
-      last30DaysTxCount: "--", // Placeholder
-      blockExplorerUrl: rowData[1].trim(), // Store block explorer URL for later use
+      l2OrL3: rowData[12],
+      settlement: rowData[13] || "--", // Include settlement data from column 14 (index 13)
+      totalAddresses: "--",
+      totalTransactions: "--",
+      transactionsToday: "--",
+      last30DaysTxCount: "--",
+      tvl: "--",
     }));
-    console.log(parsedData); // Add this line to check if the project IDs are valid
 
     return parsedData;
   } catch (error) {
@@ -75,7 +81,7 @@ export const fetchGoogleSheetData = async () => {
 const fetchTvlFromL2Beat = async (projectId) => {
   if (!projectId) {
     console.error("No projectId provided!");
-    return "--"; // Fallback in case of missing projectId
+    return "--";
   }
 
   const proxyUrl = `/api/tvl?projectId=${projectId}`;
@@ -90,7 +96,6 @@ const fetchTvlFromL2Beat = async (projectId) => {
       return "--";
     }
 
-    // The API response is assumed to return data in the expected format
     const lastEntry = tvlData[tvlData.length - 1];
     if (!lastEntry || lastEntry.length < 4) {
       console.error(`Malformed data for project ${projectId}`);
@@ -110,7 +115,7 @@ const fetchTvlFromL2Beat = async (projectId) => {
 export const fetchBlockExplorerData = async (dataRow) => {
   try {
     const explorerStats = await fetchExplorerStats(dataRow.blockExplorerUrl);
-    const tvl = await fetchTvlFromL2Beat(dataRow.projectId); // Fetch TVL data
+    const tvl = await fetchTvlFromL2Beat(dataRow.projectId);
 
     // Return updated row data with fetched block explorer stats and TVL
     return {
@@ -119,10 +124,10 @@ export const fetchBlockExplorerData = async (dataRow) => {
       totalTransactions: explorerStats.totalTransactions,
       transactionsToday: explorerStats.transactionsToday,
       last30DaysTxCount: explorerStats.last30DaysTxCount,
-      tvl, // Add the TVL field
+      tvl,
     };
   } catch (error) {
     console.error("Error fetching block explorer data:", error);
-    return dataRow; // Return the row as-is in case of an error
+    return dataRow;
   }
 };

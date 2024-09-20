@@ -1,49 +1,99 @@
+/* ChartToggle.css */
+
 .chart-toggle-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 40px;
-  width: 60%;
+  width: 50%; /* Reduced width */
   background: linear-gradient(145deg, #1b1b1b, #292929);
-  padding: 20px;
-  border-radius: 20px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  padding: 25px; /* Reduced padding */
+  margin: 50px; /* Adjusted margin */
+  margin-right: 30px;
+  margin-left: 30px;
+  border-radius: 15px; /* Slightly smaller border radius */
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3); /* Smaller shadow */
   transition: transform 0.3s ease;
+  position: relative; /* Added for positioning */
 }
 
 .chart-toggle-container:hover {
   transform: scale(1.02);
 }
 
+.chart-header {
+  display: flex;
+  width: 100%;
+  align-items: flex-start;
+  justify-content: space-between;
+  position: relative;
+}
+
+.dropdowns-container {
+  display: flex;
+  flex-direction: column;
+}
+
 .chart-toggle-dropdown {
-  margin-bottom: 20px;
+  margin-bottom: 15px; /* Reduced margin */
 }
 
 .chart-toggle-dropdown select {
-  margin-left: 10px;
-  padding: 10px;
-  font-size: 16px;
+  margin-left: 5px; /* Smaller margin */
+  padding: 8px; /* Reduced padding */
+  font-size: 14px; /* Decreased font size */
   background-color: #ff3b57;
   color: white;
   border: none;
-  border-radius: 10px;
+  border-radius: 8px; /* Smaller border radius */
   cursor: pointer;
-  box-shadow: 0 10px 20px rgba(255, 59, 87, 0.5);
+  box-shadow: 0 8px 16px rgba(255, 59, 87, 0.5); /* Reduced shadow */
   transition: background-color 0.3s ease;
 }
 
 .chart-toggle-dropdown select:hover {
-  background-color: #e12c46;
+  background-color: black;
+}
+
+.rollup-filters {
+  margin-bottom: 15px; /* Reduced margin */
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.rollup-filters label,
+.rollup-filters input {
+  margin-right: 8px;
+}
+
+.rollup-filters input {
+  padding: 8px; /* Smaller padding */
+  font-size: 12px; /* Smaller font size */
+  background-color: #292929;
+  border: none;
+  border-radius: 5px;
+  color: white;
+}
+
+.rollup-filters label {
+  font-size: 12px; /* Smaller font size */
+  color: white;
+}
+
+.rollup-filters input[type="number"] {
+  width: 70px; /* Smaller width */
+  text-align: center;
 }
 
 .chart-wrapper {
   width: 100%;
-  max-width: 600px;
-  margin: 40px;
-  padding: 30px;
+  max-width: 600px; /* Reduced max width */
+  height: 480px; /* Set fixed height for all charts */
+  margin: 20px; /* Reduced margin */
+  padding: 20px; /* Reduced padding */
   background: linear-gradient(145deg, #1e1e1e, #2e2e2e);
-  border-radius: 25px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  border-radius: 20px;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4); /* Adjusted shadow */
   position: relative;
 }
 
@@ -52,47 +102,17 @@ canvas {
   height: auto !important;
 }
 
-.download-btn {
-  padding: 12px 20px;
-  background-color: #ff3b57;
-  color: white;
+.download-icon {
+  background: none;
   border: none;
-  border-radius: 10px;
+  color: white;
   cursor: pointer;
-  font-size: 16px;
-  box-shadow: 0 10px 20px rgba(255, 59, 87, 0.5);
-  transition: background-color 0.3s ease, transform 0.3s ease;
+  font-size: 24px;
+  margin-top: 10px;
 }
 
-.download-btn:hover {
-  background-color: #e12c46;
-  transform: translateY(-3px);
-}
-
-.rollup-filters {
-  margin-bottom: 20px;
-  display: flex;
-  justify-content: space-between;
-}
-
-.rollup-filters input {
-  padding: 10px;
-  font-size: 14px;
-  background-color: #292929;
-  border: none;
-  border-radius: 5px;
-  color: white;
-}
-
-.rollup-filters label {
-  font-size: 14px;
-  color: white;
-  margin-right: 10px;
-}
-
-.rollup-filters input[type="number"] {
-  width: 80px;
-  text-align: center;
+.download-icon:hover {
+  color: #ff3b57;
 }
 
 @media (max-width: 768px) {
@@ -101,13 +121,8 @@ canvas {
   }
 
   .chart-wrapper {
-    margin: 20px;
-    padding: 20px;
-  }
-
-  .download-btn {
-    font-size: 14px;
-    padding: 10px 16px;
+    margin: 15px; /* Further reduced margin */
+    padding: 15px; /* Further reduced padding */
   }
 
   .rollup-filters input[type="number"] {
