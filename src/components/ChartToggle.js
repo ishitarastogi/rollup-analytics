@@ -9,7 +9,7 @@ import {
   LinearScale,
   BarElement,
 } from "chart.js";
-import ChartDataLabels from "chartjs-plugin-datalabels"; // Import the data labels plugin
+import ChartDataLabels from "chartjs-plugin-datalabels";
 import "./ChartToggle.css";
 
 ChartJS.register(
@@ -19,7 +19,7 @@ ChartJS.register(
   CategoryScale,
   LinearScale,
   BarElement,
-  ChartDataLabels // Register the data labels plugin
+  ChartDataLabels
 );
 
 const ChartToggle = ({ raasData, rollupsData, sheetData }) => {
@@ -27,8 +27,7 @@ const ChartToggle = ({ raasData, rollupsData, sheetData }) => {
   const [dataType, setDataType] = useState("raas");
   const [minTx, setMinTx] = useState(0);
   const [maxTx, setMaxTx] = useState(Infinity);
-
-  const chartRef = useRef(null); // Ref to access chart instance
+  const chartRef = useRef(null);
 
   const colorMap = {
     Gelato: "#ff3b57",
@@ -72,15 +71,28 @@ const ChartToggle = ({ raasData, rollupsData, sheetData }) => {
     (label) => colorMap[label] || "#000000"
   );
 
+  const createGradient = (ctx, color) => {
+    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, color);
+    gradient.addColorStop(1, "rgba(255,255,255,0)");
+    return gradient;
+  };
+
   const barRollupsData = {
     labels: filteredRollupsLabels,
     datasets: [
       {
         label: "Total Transactions by Rollups Name",
         data: filteredRollupsDataValues,
-        backgroundColor: filteredRollupsColors,
+        backgroundColor: filteredRollupsColors.map((color) =>
+          createGradient(chartRef.current?.ctx, color)
+        ),
         borderColor: filteredRollupsColors,
-        borderWidth: 1,
+        borderWidth: 2,
+        barThickness: 4,
+        hoverBackgroundColor: filteredRollupsColors.map((color) =>
+          color.replace("1)", "0.8)")
+        ),
       },
     ],
   };
@@ -93,6 +105,8 @@ const ChartToggle = ({ raasData, rollupsData, sheetData }) => {
         data: filteredRaasDataValues,
         backgroundColor: filteredRaasBackgroundColors,
         hoverOffset: 4,
+        borderColor: "#fff",
+        borderWidth: 2,
       },
     ],
   };
@@ -103,27 +117,17 @@ const ChartToggle = ({ raasData, rollupsData, sheetData }) => {
       {
         label: "Total Transactions by RaaS Provider",
         data: filteredRaasDataValues,
-        backgroundColor: filteredRaasBackgroundColors,
+        backgroundColor: filteredRaasBackgroundColors.map((color) =>
+          createGradient(chartRef.current?.ctx, color)
+        ),
         borderColor: filteredRaasBackgroundColors,
-        borderWidth: 1,
+        borderWidth: 2,
       },
     ],
   };
 
   const pieOptions = {
     plugins: {
-      tooltip: {
-        callbacks: {
-          label: function (context) {
-            const total = context.dataset.data.reduce(
-              (acc, val) => acc + val,
-              0
-            );
-            const percentage = ((context.raw / total) * 100).toFixed(2);
-            return `${context.label}: ${percentage}%`;
-          },
-        },
-      },
       datalabels: {
         formatter: (value, context) => {
           const total = context.chart.data.datasets[0].data.reduce(
@@ -134,9 +138,58 @@ const ChartToggle = ({ raasData, rollupsData, sheetData }) => {
           return `${percentage}%`;
         },
         color: "#fff",
-        anchor: "end",
-        align: "start",
-        offset: 0,
+        font: {
+          weight: "bold",
+          size: 16,
+        },
+        textShadowBlur: 6,
+        textShadowColor: "rgba(0, 0, 0, 0.7)",
+      },
+    },
+    layout: {
+      padding: 30,
+    },
+    cutout: "50%",
+    radius: "95%",
+  };
+
+  const barOptions = {
+    plugins: {
+      legend: {
+        labels: {
+          color: "#fff",
+          font: {
+            size: 14,
+            weight: "bold",
+          },
+        },
+      },
+      datalabels: {
+        display: false,
+      },
+    },
+    scales: {
+      x: {
+        ticks: {
+          color: "#fff",
+          font: {
+            size: 12,
+          },
+        },
+        grid: {
+          display: false,
+        },
+      },
+      y: {
+        ticks: {
+          color: "#fff",
+          callback: function (value) {
+            return value.toLocaleString();
+          },
+        },
+        grid: {
+          color: "rgba(255,255,255,0.1)",
+        },
       },
     },
   };
@@ -151,11 +204,13 @@ const ChartToggle = ({ raasData, rollupsData, sheetData }) => {
 
   const downloadChart = () => {
     const chartInstance = chartRef.current;
-    const url = chartInstance.toBase64Image();
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "chart.png";
-    link.click();
+    if (chartInstance) {
+      const url = chartInstance.toBase64Image();
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "chart.png";
+      link.click();
+    }
   };
 
   return (
@@ -211,15 +266,16 @@ const ChartToggle = ({ raasData, rollupsData, sheetData }) => {
             {chartType === "pie" ? (
               <Pie data={pieRaasData} options={pieOptions} ref={chartRef} />
             ) : (
-              <Bar data={barRaasData} ref={chartRef} />
+              <Bar data={barRaasData} options={barOptions} ref={chartRef} />
             )}
           </>
         )}
 
-        {dataType === "rollups" && <Bar data={barRollupsData} ref={chartRef} />}
+        {dataType === "rollups" && (
+          <Bar data={barRollupsData} options={barOptions} ref={chartRef} />
+        )}
       </div>
 
-      {/* Add the download button */}
       <button onClick={downloadChart} className="download-btn">
         Download Chart
       </button>
