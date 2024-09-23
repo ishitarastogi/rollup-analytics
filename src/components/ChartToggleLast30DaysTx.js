@@ -1,3 +1,5 @@
+// ChartToggleLast30DaysTx.js
+
 import React, { useState, useRef } from "react";
 import { Pie, Bar } from "react-chartjs-2";
 import {
@@ -23,11 +25,14 @@ ChartJS.register(
   ChartDataLabels
 );
 
-const ChartToggle = ({ raasData, rollupsData, sheetData, filters }) => {
+const ChartToggleLast30DaysTx = ({
+  raasData,
+  rollupsData,
+  sheetData,
+  filters,
+}) => {
   const [chartType, setChartType] = useState("pie");
   const [dataType, setDataType] = useState("raas");
-  const [minTransactions, setMinTransactions] = useState("");
-  const [maxTransactions, setMaxTransactions] = useState("");
   const chartRef = useRef(null);
 
   const colorMap = {
@@ -38,7 +43,7 @@ const ChartToggle = ({ raasData, rollupsData, sheetData, filters }) => {
     Altlayer: "#B28AFE",
   };
 
-  // Enhanced filter to include all desired filter options
+  // Filter the sheet data based on current filters
   const filteredRollups = sheetData.filter(
     (row) =>
       (!filters.raasProviders || row.raas === filters.raasProviders) &&
@@ -54,13 +59,7 @@ const ChartToggle = ({ raasData, rollupsData, sheetData, filters }) => {
 
   Object.entries(rollupsData).forEach(([label, value]) => {
     const rollup = filteredRollups.find((row) => row.name === label);
-
-    // Apply min and max transaction filters if set
-    if (
-      rollup &&
-      (minTransactions === "" || value >= parseInt(minTransactions, 10)) &&
-      (maxTransactions === "" || value <= parseInt(maxTransactions, 10))
-    ) {
+    if (rollup) {
       filteredRollupsLabels.push(label);
       filteredRollupsDataValues.push(value);
       filteredRollupsColors.push(colorMap[rollup.raas] || "#4185F4");
@@ -84,9 +83,6 @@ const ChartToggle = ({ raasData, rollupsData, sheetData, filters }) => {
   );
 
   const createGradient = (ctx, chartArea, color) => {
-    if (!color) {
-      color = "#000000"; // Fallback color if color is undefined
-    }
     const gradient = ctx.createLinearGradient(
       0,
       chartArea.bottom,
@@ -100,39 +96,34 @@ const ChartToggle = ({ raasData, rollupsData, sheetData, filters }) => {
 
   const barRollupsData = {
     labels: filteredRollupsLabels,
-    datasets:
-      filteredRollupsLabels.length > 0
-        ? [
-            {
-              label: "Total Transactions by Rollups Name",
-              data: filteredRollupsDataValues,
-              backgroundColor: function (context) {
-                const { chart, dataIndex } = context;
-                const ctx = chart.ctx;
-                const chartArea = chart.chartArea;
-                const color = filteredRollupsColors[dataIndex];
+    datasets: [
+      {
+        label: "30 Day Tx Count by Rollups Name",
+        data: filteredRollupsDataValues,
+        backgroundColor: function (context) {
+          const { chart, dataIndex } = context;
+          const ctx = chart.ctx;
+          const chartArea = chart.chartArea;
+          const color = filteredRollupsColors[dataIndex];
 
-                if (!chartArea) {
-                  return color || "#000000"; // Ensure fallback color if color is undefined
-                }
+          if (!chartArea) {
+            return color;
+          }
 
-                return createGradient(ctx, chartArea, color);
-              },
-              borderColor: filteredRollupsColors.map(
-                (color) => color || "#000000"
-              ), // Fallback color for undefined entries
-              borderWidth: 2,
-              barThickness: 4,
-            },
-          ]
-        : [], // If no data, return an empty dataset
+          return createGradient(ctx, chartArea, color);
+        },
+        borderColor: filteredRollupsColors,
+        borderWidth: 2,
+        barThickness: 4,
+      },
+    ],
   };
 
   const pieRaasData = {
     labels: filteredRaasLabels,
     datasets: [
       {
-        label: "Total Transactions by RaaS Provider",
+        label: "30 Day Tx Count by RaaS Provider",
         data: filteredRaasDataValues,
         backgroundColor: filteredRaasBackgroundColors,
         hoverOffset: 4,
@@ -146,7 +137,7 @@ const ChartToggle = ({ raasData, rollupsData, sheetData, filters }) => {
     labels: filteredRaasLabels,
     datasets: [
       {
-        label: "Total Transactions by RaaS Provider",
+        label: "30 Day Tx Count by RaaS Provider",
         data: filteredRaasDataValues,
         backgroundColor: function (context) {
           const { chart, dataIndex } = context;
@@ -268,10 +259,8 @@ const ChartToggle = ({ raasData, rollupsData, sheetData, filters }) => {
               value={dataType}
               onChange={handleDataTypeChange}
             >
-              <option value="raas">Total Transactions by RaaS Provider</option>
-              <option value="rollups">
-                Total Transactions by Rollups Name
-              </option>
+              <option value="raas">30 Day Tx Count by RaaS Provider</option>
+              <option value="rollups">30 Day Tx Count by Rollups Name</option>
             </select>
           </div>
 
@@ -286,25 +275,6 @@ const ChartToggle = ({ raasData, rollupsData, sheetData, filters }) => {
                 <option value="pie">Pie Chart</option>
                 <option value="bar">Bar Chart</option>
               </select>
-            </div>
-          )}
-
-          {dataType === "rollups" && (
-            <div className="transaction-filters">
-              <label htmlFor="minTransactions">Min Transactions: </label>
-              <input
-                type="number"
-                id="minTransactions"
-                value={minTransactions}
-                onChange={(e) => setMinTransactions(e.target.value)}
-              />
-              <label htmlFor="maxTransactions">Max Transactions: </label>
-              <input
-                type="number"
-                id="maxTransactions"
-                value={maxTransactions}
-                onChange={(e) => setMaxTransactions(e.target.value)}
-              />
             </div>
           )}
         </div>
@@ -325,16 +295,12 @@ const ChartToggle = ({ raasData, rollupsData, sheetData, filters }) => {
           </>
         )}
 
-        {dataType === "rollups" && filteredRollupsLabels.length > 0 ? (
+        {dataType === "rollups" && (
           <Bar data={barRollupsData} options={barOptions} ref={chartRef} />
-        ) : (
-          dataType === "rollups" && (
-            <p>No rollups match the specified transaction criteria.</p>
-          )
         )}
       </div>
     </div>
   );
 };
 
-export default ChartToggle;
+export default ChartToggleLast30DaysTx;

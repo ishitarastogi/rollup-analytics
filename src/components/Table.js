@@ -6,6 +6,8 @@ import {
 import FilterBar from "./FilterBar";
 import ChartToggle from "./ChartToggle";
 import ChartToggleAddresses from "./ChartToggleAddresses";
+import ChartToggleLast30DaysTx from "./ChartToggleLast30DaysTx"; // Import the new component
+
 import "./Table.css";
 
 const Table = () => {
@@ -56,7 +58,8 @@ const Table = () => {
   const [raasData, setRaasData] = useState({});
   const [rollupsData, setRollupsData] = useState({});
   const [addressesData, setAddressesData] = useState({});
-
+  const [raasLast30DaysTxData, setRaasLast30DaysTxData] = useState({});
+  const [rollupsLast30DaysTxData, setRollupsLast30DaysTxData] = useState({});
   // State for sorting
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
 
@@ -115,9 +118,30 @@ const Table = () => {
           return acc;
         }, {});
 
+        // Calculate the sum of last 30 days transaction counts for each RaaS provider
+        const raasLast30DaysTxSums = updatedData.reduce((acc, row) => {
+          if (!row.last30DaysTxCount || row.last30DaysTxCount === "--")
+            return acc;
+          const txCount = Number(row.last30DaysTxCount);
+          acc[row.raas] = (acc[row.raas] || 0) + txCount;
+          return acc;
+        }, {});
+
+        // Calculate the sum of last 30 days transaction counts for each Rollup
+        const rollupsLast30DaysTxSums = updatedData.reduce((acc, row) => {
+          if (!row.last30DaysTxCount || row.last30DaysTxCount === "--")
+            return acc;
+          const txCount = Number(row.last30DaysTxCount);
+          acc[row.name] = (acc[row.name] || 0) + txCount;
+          return acc;
+        }, {});
+
         setRaasData(raasTransactionSums);
         setRollupsData(rollupsTransactionSums);
         setAddressesData(addressesTransactionSums);
+        setRaasLast30DaysTxData(raasLast30DaysTxSums);
+        setRollupsLast30DaysTxData(rollupsLast30DaysTxSums);
+
         setLoading(false);
         setError(null);
       } catch (error) {
@@ -523,19 +547,32 @@ const Table = () => {
       </div>
 
       <div className="charts-container">
-        <ChartToggle
-          raasData={raasData}
-          rollupsData={rollupsData}
-          sheetData={sheetData}
-          filters={filters} // Pass filters to ChartToggle
-        />
+        <div className="chart-item">
+          <ChartToggle
+            raasData={raasData}
+            rollupsData={rollupsData}
+            sheetData={sheetData}
+            filters={filters}
+          />
+        </div>
 
-        <ChartToggleAddresses
-          raasData={raasData}
-          rollupsData={addressesData}
-          sheetData={sheetData}
-          filters={filters} // Pass filters to ChartToggleAddresses
-        />
+        <div className="chart-item">
+          <ChartToggleAddresses
+            raasData={raasData}
+            rollupsData={addressesData}
+            sheetData={sheetData}
+            filters={filters}
+          />
+        </div>
+
+        <div className="chart-item">
+          <ChartToggleLast30DaysTx
+            raasData={raasLast30DaysTxData}
+            rollupsData={rollupsLast30DaysTxData}
+            sheetData={sheetData}
+            filters={filters}
+          />
+        </div>
       </div>
     </div>
   );
