@@ -1,5 +1,3 @@
-// ChartToggleLast30DaysTx.js
-
 import React, { useState, useRef } from "react";
 import { Pie, Bar } from "react-chartjs-2";
 import {
@@ -33,6 +31,8 @@ const ChartToggleLast30DaysTx = ({
 }) => {
   const [chartType, setChartType] = useState("pie");
   const [dataType, setDataType] = useState("raas");
+  const [minTransactions, setMinTransactions] = useState(""); // Min transactions filter
+  const [maxTransactions, setMaxTransactions] = useState(""); // Max transactions filter
   const chartRef = useRef(null);
 
   const colorMap = {
@@ -59,7 +59,13 @@ const ChartToggleLast30DaysTx = ({
 
   Object.entries(rollupsData).forEach(([label, value]) => {
     const rollup = filteredRollups.find((row) => row.name === label);
-    if (rollup) {
+
+    // Apply min and max transaction filters if set and only for rollups
+    if (
+      rollup &&
+      (minTransactions === "" || value >= parseInt(minTransactions, 10)) &&
+      (maxTransactions === "" || value <= parseInt(maxTransactions, 10))
+    ) {
       filteredRollupsLabels.push(label);
       filteredRollupsDataValues.push(value);
       filteredRollupsColors.push(colorMap[rollup.raas] || "#4185F4");
@@ -83,6 +89,9 @@ const ChartToggleLast30DaysTx = ({
   );
 
   const createGradient = (ctx, chartArea, color) => {
+    if (!color) {
+      color = "#000000"; // Fallback color if color is undefined
+    }
     const gradient = ctx.createLinearGradient(
       0,
       chartArea.bottom,
@@ -264,17 +273,23 @@ const ChartToggleLast30DaysTx = ({
             </select>
           </div>
 
-          {dataType === "raas" && (
-            <div className="chart-toggle-dropdown">
-              <label htmlFor="chartType">Select Chart Type: </label>
-              <select
-                id="chartType"
-                value={chartType}
-                onChange={handleChartTypeChange}
-              >
-                <option value="pie">Pie Chart</option>
-                <option value="bar">Bar Chart</option>
-              </select>
+          {/* Only show the transaction filters for Rollups */}
+          {dataType === "rollups" && (
+            <div className="transaction-filters">
+              <label htmlFor="minTransactions">Min Transactions: </label>
+              <input
+                type="number"
+                id="minTransactions"
+                value={minTransactions}
+                onChange={(e) => setMinTransactions(e.target.value)}
+              />
+              <label htmlFor="maxTransactions">Max Transactions: </label>
+              <input
+                type="number"
+                id="maxTransactions"
+                value={maxTransactions}
+                onChange={(e) => setMaxTransactions(e.target.value)}
+              />
             </div>
           )}
         </div>
@@ -295,8 +310,12 @@ const ChartToggleLast30DaysTx = ({
           </>
         )}
 
-        {dataType === "rollups" && (
+        {dataType === "rollups" && filteredRollupsLabels.length > 0 ? (
           <Bar data={barRollupsData} options={barOptions} ref={chartRef} />
+        ) : (
+          dataType === "rollups" && (
+            <p>No rollups match the specified transaction criteria.</p>
+          )
         )}
       </div>
     </div>

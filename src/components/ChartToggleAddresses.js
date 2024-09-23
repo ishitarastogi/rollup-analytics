@@ -31,6 +31,8 @@ const ChartToggleAddresses = ({
 }) => {
   const [chartType, setChartType] = useState("pie");
   const [dataType, setDataType] = useState("raas");
+  const [minAddresses, setMinAddresses] = useState(""); // Min addresses filter
+  const [maxAddresses, setMaxAddresses] = useState(""); // Max addresses filter
   const chartRef = useRef(null);
 
   const colorMap = {
@@ -57,7 +59,13 @@ const ChartToggleAddresses = ({
 
   Object.entries(rollupsData).forEach(([label, value]) => {
     const rollup = filteredRollups.find((row) => row.name === label);
-    if (rollup) {
+
+    // Apply min and max addresses filters if set
+    if (
+      rollup &&
+      (minAddresses === "" || value >= parseInt(minAddresses, 10)) &&
+      (maxAddresses === "" || value <= parseInt(maxAddresses, 10))
+    ) {
       filteredRollupsLabels.push(label);
       filteredRollupsDataValues.push(value);
       filteredRollupsColors.push(colorMap[rollup.raas] || "#4185F4");
@@ -81,6 +89,9 @@ const ChartToggleAddresses = ({
   );
 
   const createGradient = (ctx, chartArea, color) => {
+    if (!color) {
+      color = "#000000"; // Fallback color if color is undefined
+    }
     const gradient = ctx.createLinearGradient(
       0,
       chartArea.bottom,
@@ -262,17 +273,23 @@ const ChartToggleAddresses = ({
             </select>
           </div>
 
-          {dataType === "raas" && (
-            <div className="chart-toggle-dropdown">
-              <label htmlFor="chartType">Select Chart Type: </label>
-              <select
-                id="chartType"
-                value={chartType}
-                onChange={handleChartTypeChange}
-              >
-                <option value="pie">Pie Chart</option>
-                <option value="bar">Bar Chart</option>
-              </select>
+          {/* Only show the address filters for Rollups */}
+          {dataType === "rollups" && (
+            <div className="transaction-filters">
+              <label htmlFor="minAddresses">Min Addresses: </label>
+              <input
+                type="number"
+                id="minAddresses"
+                value={minAddresses}
+                onChange={(e) => setMinAddresses(e.target.value)}
+              />
+              <label htmlFor="maxAddresses">Max Addresses: </label>
+              <input
+                type="number"
+                id="maxAddresses"
+                value={maxAddresses}
+                onChange={(e) => setMaxAddresses(e.target.value)}
+              />
             </div>
           )}
         </div>
@@ -293,8 +310,12 @@ const ChartToggleAddresses = ({
           </>
         )}
 
-        {dataType === "rollups" && (
+        {dataType === "rollups" && filteredRollupsLabels.length > 0 ? (
           <Bar data={barRollupsData} options={barOptions} ref={chartRef} />
+        ) : (
+          dataType === "rollups" && (
+            <p>No rollups match the specified address criteria.</p>
+          )
         )}
       </div>
     </div>
